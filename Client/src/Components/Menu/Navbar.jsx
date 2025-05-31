@@ -1,11 +1,18 @@
 import { useLocation, Link } from "react-router";
 import UseAuth from "./../../Hooks/UseAuth";
 import logo from "../../assets/logo.png";
+import React, { useState, useEffect, useRef } from "react";
+import { IoIosClose } from "react-icons/io";
+import { PiSignOutBold } from "react-icons/pi";
 
 const Navbar = () => {
-  const { user } = UseAuth();
+  const { user, signOutUser } = UseAuth();
   const location = useLocation();
   const { pathname } = location;
+
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const profileMenuRef = useRef(null);
+  const profileImageRef = useRef(null);
 
   const menuItems = {
     "/dashboard": [
@@ -20,7 +27,6 @@ const Navbar = () => {
       { path: "#", label: "Insert" },
       { path: "#", label: "Format" },
       { path: "#", label: "Tools" },
-      // Icons shown in your image can be rendered separately as buttons
     ],
     default: [
       { path: "/", label: "🏠 Home" },
@@ -31,41 +37,86 @@ const Navbar = () => {
   let currentMenuItems = [];
   if (pathname.startsWith("/dashboard")) {
     currentMenuItems = menuItems["/dashboard"];
+  } else if (pathname.startsWith("/document")) {
+    // Added /document specific menu
+    currentMenuItems = menuItems["/document"];
   } else if (pathname.startsWith("/members")) {
-    currentMenuItems = menuItems["/members"];
+    currentMenuItems = menuItems["/members"]; // Assuming you might have this
   } else if (pathname.startsWith("/collections")) {
-    currentMenuItems = menuItems["/collections"];
+    currentMenuItems = menuItems["/collections"]; // Assuming you might have this
   } else if (pathname.startsWith("/admin")) {
-    currentMenuItems = menuItems["/admin"];
+    currentMenuItems = menuItems["/admin"]; // Assuming you might have this
   }
 
   if (currentMenuItems.length === 0 && menuItems.default) {
-    if (pathname === "/") {
+    if (pathname === "/" || pathname === "/about") {
+      // Adjusted for default items
       currentMenuItems = menuItems.default;
     }
   }
 
+  const toggleProfileMenu = () => {
+    setIsProfileMenuOpen(!isProfileMenuOpen);
+  };
+
+  const handleSignOut = () => {
+    if (signOutUser) {
+      signOutUser()
+        .then(() => {
+          setIsProfileMenuOpen(false);
+        })
+        .catch((error) => {
+          console.error("Sign out error:", error);
+        });
+    } else {
+      setIsProfileMenuOpen(false);
+    }
+  };
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (
+        isProfileMenuOpen &&
+        profileMenuRef.current &&
+        !profileMenuRef.current.contains(event.target) &&
+        profileImageRef.current &&
+        !profileImageRef.current.contains(event.target)
+      ) {
+        setIsProfileMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isProfileMenuOpen]);
+
+  const firstName = user?.displayName?.split(" ")[0] || "User";
+
   return (
-    <div className="container mx-auto py-2  border-b-2">
+    <div className="container mx-auto py-2 border-b-2">
       <section className="flex items-center justify-between ">
         {/* Left Section - Logo */}
-        <div>
+        <div className="flex items-center">
           <Link to="/">
             <img src={logo} alt="CollabDocs" className="h-10" />
           </Link>
+          <span className="ml-3 text-xl font-semibold text-gray-700">
+            CollabDocs
+          </span>
         </div>
 
         {/* Middle Section - Dynamic Menu */}
-        <nav className="flex items-center space-x-4">
+        <nav className="hidden md:flex items-center space-x-1">
           {currentMenuItems &&
             currentMenuItems.map((item) => (
               <Link
-                key={item.path}
+                key={item.path + item.label} // Ensure unique key
                 to={item.path}
                 className={`px-3 py-2 rounded-md text-sm font-medium ${
                   pathname === item.path
-                    ? "bg-gray-700 text-white" // অ্যাক্টিভ লিঙ্কের স্টাইল
-                    : "text-gray-700 hover:bg-gray-200 hover:text-black" // ইনঅ্যাক্টিভ লিঙ্কের স্টাইল
+                    ? "bg-gray-700 text-white"
+                    : "text-gray-700 hover:bg-gray-200 hover:text-black"
                 }`}
               >
                 {item.label}
@@ -73,18 +124,70 @@ const Navbar = () => {
             ))}
         </nav>
 
-        {/* Right Section - User Image */}
-        <div className="rounded-full">
+        {/* Right Section - User Image & Profile Menu */}
+        <div className="relative">
           {user ? (
-            <img
-              src={user.photoURL}
-              alt={user.displayName || "User"}
-              className="w-[40px] h-[40px] rounded-full border border-primary"
-            />
+            <>
+              <img
+                ref={profileImageRef}
+                src={user.photoURL || "https://via.placeholder.com/40"}
+                alt={user.displayName || "User"}
+                className="w-[40px] h-[40px] rounded-full border-2 border-gray-300 hover:border-blue-500 cursor-pointer object-cover"
+                onClick={toggleProfileMenu}
+              />
+              {isProfileMenuOpen && (
+                <div
+                  ref={profileMenuRef}
+                  className="absolute right-0 mt-3 w-80 bg-white rounded-xl shadow-2xl z-50 p-5 border border-gray-200"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="flex justify-center items-center mb-1">
+                    <span
+                      className="text-sm text-gray-500 truncate"
+                      title={user.email}
+                    >
+                      {user.email || "user@example.com"}
+                    </span>
+                  </div>
+                  <button
+                    onClick={toggleProfileMenu}
+                    className="text-gray-400 hover:text-gray-600 p-1 -mr-1 top-2 right-3 absolute"
+                  >
+                    <IoIosClose className="text-3xl" />
+                  </button>
+
+                  <div className="text-center pt-2 pb-4 border-b border-gray-200">
+                    <img
+                      src={user.photoURL || "https://via.placeholder.com/80"} // Fallback avatar
+                      alt={user.displayName || "User"}
+                      className="w-20 h-20 rounded-full mx-auto mb-3 border-2 border-gray-300 object-cover"
+                    />
+                    <h2 className="text-lg font-semibold text-gray-800">
+                      Hi, {firstName}!
+                    </h2>
+                  </div>
+
+                  <div className="py-2">
+                    <div className="space-y-1 mt-2">
+                      <button
+                        onClick={handleSignOut}
+                        className="w-full flex items-center text-gray-700 hover:bg-gray-100 py-2.5 px-3 rounded-lg text-sm transition-colors duration-150"
+                      >
+                        <PiSignOutBold className="mr-2" />
+                        Sign out
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </>
           ) : (
-            <Link to="/login" className="text-gray-700 hover:text-black">
+            <Link
+              to="/login"
+              className="px-4 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-200 hover:text-black"
+            >
               Login
-            </Link> // যদি ইউজার না থাকে
+            </Link>
           )}
         </div>
       </section>

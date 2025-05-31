@@ -7,6 +7,7 @@ import SharedDocument from "../Components/PrivateComponent/SharedDocument";
 import NewDocuments from "../Components/PrivateComponent/NewDocuments";
 import DocumentDetails from "../Components/PrivateComponent/DocumentDetails";
 import ActiveUser from "../Components/PrivateComponent/ActiveUser";
+import PrivateRoutes from "./PrivateRoutes";
 
 export const router = createBrowserRouter([
   {
@@ -19,7 +20,11 @@ export const router = createBrowserRouter([
   },
   {
     path: "/dashboard",
-    element: <Dashboard></Dashboard>,
+    element: (
+      <PrivateRoutes>
+        <Dashboard></Dashboard>
+      </PrivateRoutes>
+    ),
     children: [
       {
         index: true,

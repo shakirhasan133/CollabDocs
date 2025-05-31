@@ -1,5 +1,3 @@
-import React from "react";
-
 const ActiveUser = () => {
   return (
     <div className="container mx-auto min-h-screen">
