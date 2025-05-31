@@ -9,9 +9,9 @@ const Navbar = () => {
 
   const menuItems = {
     "/dashboard": [
-      { path: "/dashboard/my-documents", label: "📄 My Documents" },
-      { path: "/dashboard/shared", label: "👥 Shared With Me" },
-      // { path: "/dashboard/create", label: "➕ New Document" },
+      { path: "/dashboard/my-documents", label: "My Documents" },
+      { path: "/dashboard/shared", label: "Shared With Me" },
+      { path: "/dashboard/active-user", label: "Active User" },
     ],
     "/document": [
       { path: "#", label: "File" },

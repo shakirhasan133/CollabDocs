@@ -5,6 +5,8 @@ import Dashboard from "../Layout/Dashboard";
 import MyFile from "../Components/PrivateComponent/MyFile";
 import SharedDocument from "../Components/PrivateComponent/SharedDocument";
 import NewDocuments from "../Components/PrivateComponent/NewDocuments";
+import DocumentDetails from "../Components/PrivateComponent/DocumentDetails";
+import ActiveUser from "../Components/PrivateComponent/ActiveUser";
 
 export const router = createBrowserRouter([
   {
@@ -34,6 +36,14 @@ export const router = createBrowserRouter([
       {
         path: "new-document",
         element: <NewDocuments></NewDocuments>,
+      },
+      {
+        path: "active-user",
+        element: <ActiveUser></ActiveUser>,
+      },
+      {
+        path: "documents/:id",
+        element: <DocumentDetails></DocumentDetails>,
       },
     ],
   },
