@@ -12,13 +12,7 @@ const SignUpPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, isShowPassword] = useState(false);
-  const {
-    setUser,
-    logInWithGoogle,
-    SigninWithUserEmail,
-    signUpNewUser,
-    updateUserData,
-  } = UseAuth();
+  const { logInWithGoogle, signUpNewUser, updateUserData } = UseAuth();
   const [error, setError] = useState("");
   const [image, setImage] = useState("");
   const navigate = useNavigate();
@@ -27,9 +21,28 @@ const SignUpPage = () => {
 
   const handleLoginWithGoolge = () => {
     logInWithGoogle()
-      .then((result) => {
-        // console.log(result);
-        setUser(result?.user);
+      .then(() => {
+        let timerInterval;
+        Swal.fire({
+          title: "Log in Successful",
+          html: "I will redirect within <b></b> milliseconds.",
+          timer: 3000,
+          timerProgressBar: true,
+          didOpen: () => {
+            Swal.showLoading();
+            const timer = Swal.getPopup().querySelector("b");
+            timerInterval = setInterval(() => {
+              timer.textContent = `${Swal.getTimerLeft()}`;
+            }, 100);
+          },
+          willClose: () => {
+            clearInterval(timerInterval);
+          },
+        }).then((result) => {
+          if (result.dismiss === Swal.DismissReason.timer) {
+            navigate("/dashboard");
+          }
+        });
       })
       .catch((error) => {
         console.log(error.message);
@@ -53,38 +66,38 @@ const SignUpPage = () => {
 
     try {
       signUpNewUser(email, password)
-        .then(async (data) => {
-          await updateUserData(name, image);
-
-          let timerInterval;
-          Swal.fire({
-            title: "Auto close alert!",
-            html: "I will close in <b></b> milliseconds.",
-            timer: 3000,
-            timerProgressBar: true,
-            didOpen: () => {
-              Swal.showLoading();
-              const timer = Swal.getPopup().querySelector("b");
-              timerInterval = setInterval(() => {
-                timer.textContent = `${Swal.getTimerLeft()}`;
-              }, 100);
-            },
-            willClose: () => {
-              clearInterval(timerInterval);
-            },
-          }).then((result) => {
-            /* Read more about handling dismissals below */
-            if (result.dismiss === Swal.DismissReason.timer) {
-              setUser(data.user);
-              navigate("/dashboard");
-            }
+        .then(async () => {
+          await updateUserData(name, image).then(() => {
+            let timerInterval;
+            Swal.fire({
+              title: "Sign up successful",
+              html: "I will redirect in <b></b> milliseconds.",
+              timer: 3000,
+              timerProgressBar: true,
+              didOpen: () => {
+                Swal.showLoading();
+                const timer = Swal.getPopup().querySelector("b");
+                timerInterval = setInterval(() => {
+                  timer.textContent = `${Swal.getTimerLeft()}`;
+                }, 100);
+              },
+              willClose: () => {
+                clearInterval(timerInterval);
+              },
+            }).then((result) => {
+              if (result.dismiss === Swal.DismissReason.timer) {
+                navigate("/dashboard");
+              }
+            });
           });
         })
         .catch((error) => {
           console.log(error);
+          setError(error.message);
         });
     } catch (error) {
       console.log(error);
+      setError(error.message);
     }
   };
 

@@ -21,7 +21,7 @@ const ActiveUser = () => {
             </thead>
             <tbody>
               <tr className="border-t border-t-[#cfd8e7]">
-                <td class=" h-[72px] px-4 py-2 w-14 text-sm">
+                <td className=" h-[72px] px-4 py-2 w-14 text-sm">
                   <div className="rounded-full w-10">
                     <img
                       src="https://lh3.googleusercontent.com/aida-public/AB6AXuDz5-StoPbK4UtgFuTPDQSSgVUOkemHf9f8qJMU0s1l6bYPm9nDrfE1oPD6A2nG1Vg2sVCWn73fVVAowOhTvUZbfj-1I8cJLStoaVFOeKh3TMjVeas2oZLpXUWUGuGOD8MNlBRK587F7HA4gAGMLo6yizcDtaUL5Rv5uqCc1qLlvWYkrellXcRgqMIJAIxJInMWw1HOAjCOQIOzWKJxU2KYkq3Mzc4ueUTa3opqZ4zTFNEPh-jNHIwqR7bqewPUXMHCk2xKE_glBf4e"

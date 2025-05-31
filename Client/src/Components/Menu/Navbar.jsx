@@ -1,4 +1,4 @@
-import { useLocation, Link } from "react-router";
+import { useLocation, Link, useNavigate } from "react-router";
 import UseAuth from "./../../Hooks/UseAuth";
 import logo from "../../assets/logo.png";
 import React, { useState, useEffect, useRef } from "react";
@@ -9,10 +9,13 @@ const Navbar = () => {
   const { user, signOutUser } = UseAuth();
   const location = useLocation();
   const { pathname } = location;
+  const navigate = useNavigate();
 
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const profileMenuRef = useRef(null);
   const profileImageRef = useRef(null);
+
+  console.log(user);
 
   const menuItems = {
     "/dashboard": [
@@ -38,19 +41,17 @@ const Navbar = () => {
   if (pathname.startsWith("/dashboard")) {
     currentMenuItems = menuItems["/dashboard"];
   } else if (pathname.startsWith("/document")) {
-    // Added /document specific menu
     currentMenuItems = menuItems["/document"];
   } else if (pathname.startsWith("/members")) {
-    currentMenuItems = menuItems["/members"]; // Assuming you might have this
+    currentMenuItems = menuItems["/members"];
   } else if (pathname.startsWith("/collections")) {
-    currentMenuItems = menuItems["/collections"]; // Assuming you might have this
+    currentMenuItems = menuItems["/collections"];
   } else if (pathname.startsWith("/admin")) {
-    currentMenuItems = menuItems["/admin"]; // Assuming you might have this
+    currentMenuItems = menuItems["/admin"];
   }
 
   if (currentMenuItems.length === 0 && menuItems.default) {
     if (pathname === "/" || pathname === "/about") {
-      // Adjusted for default items
       currentMenuItems = menuItems.default;
     }
   }
@@ -60,17 +61,13 @@ const Navbar = () => {
   };
 
   const handleSignOut = () => {
-    if (signOutUser) {
-      signOutUser()
-        .then(() => {
-          setIsProfileMenuOpen(false);
-        })
-        .catch((error) => {
-          console.error("Sign out error:", error);
-        });
-    } else {
-      setIsProfileMenuOpen(false);
-    }
+    signOutUser()
+      .then(() => {
+        navigate("/");
+      })
+      .catch((error) => {
+        console.log(error);
+      });
   };
 
   useEffect(() => {
@@ -101,17 +98,14 @@ const Navbar = () => {
           <Link to="/">
             <img src={logo} alt="CollabDocs" className="h-10" />
           </Link>
-          <span className="ml-3 text-xl font-semibold text-gray-700">
-            CollabDocs
-          </span>
         </div>
 
         {/* Middle Section - Dynamic Menu */}
-        <nav className="hidden md:flex items-center space-x-1">
+        <nav className="hidden md:flex items-center space-x-1 gap-2">
           {currentMenuItems &&
             currentMenuItems.map((item) => (
               <Link
-                key={item.path + item.label} // Ensure unique key
+                key={item.path + item.label}
                 to={item.path}
                 className={`px-3 py-2 rounded-md text-sm font-medium ${
                   pathname === item.path

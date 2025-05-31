@@ -6,8 +6,10 @@ import {
   signInWithEmailAndPassword,
   signInWithPopup,
   updateProfile,
+  signOut,
 } from "firebase/auth";
 import { auth, provider } from "./../Firebase/firebase.config";
+import axios from "axios";
 
 const AuthProvider = ({ children }) => {
   const [user, setUser] = useState({});
@@ -33,7 +35,15 @@ const AuthProvider = ({ children }) => {
 
   // Update Registered User Data
   const updateUserData = (fullName, imageURL) => {
-    return updateProfile(auth.currentUser, { fullName, imageURL });
+    return updateProfile(auth.currentUser, {
+      displayName: fullName,
+      photoURL: imageURL,
+    });
+  };
+
+  // SignOut User
+  const signOutUser = () => {
+    return signOut(auth);
   };
 
   const authInfo = {
@@ -44,15 +54,40 @@ const AuthProvider = ({ children }) => {
     setUser,
     signUpNewUser,
     updateUserData,
+    signOutUser,
   };
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (userCredential) => {
+    const unsubscribe = onAuthStateChanged(auth, async (userCredential) => {
       // const user = userCredential?.user;
       // console.log(userCredential);
 
-      setUser(userCredential);
-      setLoading(false);
+      try {
+        if (userCredential?.email) {
+          await axios.post(
+            `${import.meta.env.VITE_Api_URL}/JWT`,
+            { email: userCredential?.email },
+            { withCredentials: true }
+          );
+          setUser(userCredential);
+          setLoading(false);
+        } else {
+          await axios.post(
+            `${import.meta.env.VITE_Api_URL}/logout`,
+            {},
+            {
+              withCredentials: true,
+            }
+          );
+          setUser(userCredential);
+          setLoading(false);
+        }
+      } catch (error) {
+        console.log(error);
+      }
+
+      // setUser(userCredential);
+      // setLoading(false);
     });
 
     return () => {

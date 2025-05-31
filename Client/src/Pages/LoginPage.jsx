@@ -3,37 +3,78 @@ import loginImage from "../assets/loginlottie.json";
 import Lottie from "lottie-react";
 import { FcGoogle } from "react-icons/fc";
 import UseAuth from "../Hooks/UseAuth";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { FaRegEye, FaRegEyeSlash } from "react-icons/fa";
+import Swal from "sweetalert2";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const { setUser, logInWithGoogle, SigninWithUserEmail } = UseAuth();
+  const { logInWithGoogle, SigninWithUserEmail } = UseAuth();
   const [error, setError] = useState("");
   const [showPassword, isShowPassword] = useState(false);
+  const navigate = useNavigate();
+
+  // Handle Log in with Google
 
   // Handle Log in with Google
 
   const handleLoginWithGoolge = () => {
     logInWithGoogle()
-      .then((result) => {
-        // console.log(result);
-        setUser(result?.user);
+      .then(() => {
+        let timerInterval;
+        Swal.fire({
+          title: "Log in Successful",
+          html: "I will redirect within<b></b> milliseconds.",
+          timer: 3000,
+          timerProgressBar: true,
+          didOpen: () => {
+            Swal.showLoading();
+            const timer = Swal.getPopup().querySelector("b");
+            timerInterval = setInterval(() => {
+              timer.textContent = `${Swal.getTimerLeft()}`;
+            }, 100);
+          },
+          willClose: () => {
+            clearInterval(timerInterval);
+          },
+        }).then((result) => {
+          if (result.dismiss === Swal.DismissReason.timer) {
+            navigate("/dashboard");
+          }
+        });
       })
       .catch((error) => {
         console.log(error.message);
       });
   };
-
   const handleLogin = (e) => {
     e.preventDefault();
 
     try {
       SigninWithUserEmail(email, password)
-        .then((result) => {
-          const user = result.user;
-          setUser(user);
+        .then(() => {
+          let timerInterval;
+          Swal.fire({
+            title: "Log in Successful",
+            html: "I will redirect within <b></b> milliseconds.",
+            timer: 3000,
+            timerProgressBar: true,
+            didOpen: () => {
+              Swal.showLoading();
+              const timer = Swal.getPopup().querySelector("b");
+              timerInterval = setInterval(() => {
+                timer.textContent = `${Swal.getTimerLeft()}`;
+              }, 100);
+            },
+            willClose: () => {
+              clearInterval(timerInterval);
+            },
+          }).then((result) => {
+            if (result.dismiss === Swal.DismissReason.timer) {
+              navigate("/dashboard");
+            }
+          });
         })
         .catch((error) => {
           setError(error.message);
