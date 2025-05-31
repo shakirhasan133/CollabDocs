@@ -4,6 +4,7 @@ import SignUpPage from "../Pages/SignUpPage";
 import Dashboard from "../Layout/Dashboard";
 import MyFile from "../Components/PrivateComponent/MyFile";
 import SharedDocument from "../Components/PrivateComponent/SharedDocument";
+import NewDocuments from "../Components/PrivateComponent/NewDocuments";
 
 export const router = createBrowserRouter([
   {
@@ -29,6 +30,10 @@ export const router = createBrowserRouter([
       {
         path: "shared",
         element: <SharedDocument></SharedDocument>,
+      },
+      {
+        path: "new-document",
+        element: <NewDocuments></NewDocuments>,
       },
     ],
   },

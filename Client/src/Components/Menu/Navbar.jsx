@@ -11,7 +11,7 @@ const Navbar = () => {
     "/dashboard": [
       { path: "/dashboard/my-documents", label: "📄 My Documents" },
       { path: "/dashboard/shared", label: "👥 Shared With Me" },
-      { path: "/dashboard/create", label: "➕ New Document" },
+      // { path: "/dashboard/create", label: "➕ New Document" },
     ],
     "/document": [
       { path: "#", label: "File" },

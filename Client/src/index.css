@@ -11,3 +11,7 @@
   --color-muted: oklch(0.51 0.03 250); /* #6B7280 (Cool Gray) */
   --color-danger: oklch(0.69 0.25 20); /* #F43F5E (Rose Red) */
 }
+
+html {
+  background-color: white;
+}

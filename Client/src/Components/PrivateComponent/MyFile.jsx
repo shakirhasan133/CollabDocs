@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import defaultImg from "../../assets/doc.png";
 import LoadingPage from "../../Pages/LoadingPage";
+import { useNavigate } from "react-router";
 
 const MyFile = () => {
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   console.log(documents);
 
@@ -18,13 +20,19 @@ const MyFile = () => {
     fetchData();
   }, []);
 
+  const handleNewDocument = () => {
+    navigate("/dashboard/new-document");
+  };
+
   return (
     <div>
       <section className="container mx-auto py-5 h-full">
         {/* Header */}
         <div className="flex items-center justify-between">
           <h1 className="text-black text-3xl font bold">My Documents</h1>
-          <button className="btn">Create New Documents</button>
+          <button className="btn" onClick={handleNewDocument}>
+            Create New Documents
+          </button>
         </div>
 
         {/* Content */}
