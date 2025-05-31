@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router";
 import JoditEditor from "jodit-react";
 import { FiEdit2 } from "react-icons/fi";
+import io from "socket.io-client";
 
 const DocumentDetails = () => {
   const { id } = useParams();
@@ -11,7 +12,27 @@ const DocumentDetails = () => {
   const [fetchData, setFetchData] = useState([]);
   const [title, setTitle] = useState("");
 
-  console.log(content);
+  const socketRef = useRef(null);
+
+  // console.log(content);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      if (!socketRef.current || !socketRef.current.connected) {
+        socketRef.current = io(`${import.meta.env.VITE_Api_URL}`);
+        socketRef.current.on("connected", () => {
+          console.log(
+            "Socket.IO সার্ভারের সাথে কানে���্টেড:",
+            socketRef.current.id
+          );
+        });
+        socketRef.on("disconnected", () => {
+          console.log("Disconected");
+        });
+      }
+    }
+  }, []);
+
   useEffect(() => {
     const loadData = async () => {
       const res = await fetch("/file.json");
