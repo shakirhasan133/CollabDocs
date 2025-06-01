@@ -8,18 +8,11 @@ import NewDocuments from "../Components/PrivateComponent/NewDocuments";
 import DocumentDetails from "../Components/PrivateComponent/DocumentDetails";
 import ActiveUser from "../Components/PrivateComponent/ActiveUser";
 import PrivateRoutes from "./PrivateRoutes";
+import ErrorPage from "../Pages/ErrorPage";
 
 export const router = createBrowserRouter([
   {
     path: "/",
-    element: <LoginPage></LoginPage>,
-  },
-  {
-    path: "/register",
-    element: <SignUpPage></SignUpPage>,
-  },
-  {
-    path: "/dashboard",
     element: (
       <PrivateRoutes>
         <Dashboard></Dashboard>
@@ -51,5 +44,15 @@ export const router = createBrowserRouter([
         element: <DocumentDetails></DocumentDetails>,
       },
     ],
+    errorElement: <ErrorPage></ErrorPage>,
+  },
+
+  {
+    path: "/register",
+    element: <SignUpPage></SignUpPage>,
+  },
+  {
+    path: "/login",
+    element: <LoginPage></LoginPage>,
   },
 ]);

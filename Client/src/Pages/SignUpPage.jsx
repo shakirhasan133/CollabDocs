@@ -40,7 +40,7 @@ const SignUpPage = () => {
           },
         }).then((result) => {
           if (result.dismiss === Swal.DismissReason.timer) {
-            navigate("/dashboard");
+            navigate("/");
           }
         });
       })
@@ -86,7 +86,7 @@ const SignUpPage = () => {
               },
             }).then((result) => {
               if (result.dismiss === Swal.DismissReason.timer) {
-                navigate("/dashboard");
+                navigate("/");
               }
             });
           });
@@ -245,7 +245,7 @@ const SignUpPage = () => {
               <p className="text-sm text-center text-gray-600 mt-8">
                 Already have a account?{" "}
                 <Link
-                  to={"/"}
+                  to={"/login"}
                   className="text-blue-600 hover:underline font-medium"
                 >
                   Sign in

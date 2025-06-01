@@ -40,7 +40,7 @@ const LoginPage = () => {
           },
         }).then((result) => {
           if (result.dismiss === Swal.DismissReason.timer) {
-            navigate("/dashboard");
+            navigate("/");
           }
         });
       })
@@ -72,7 +72,7 @@ const LoginPage = () => {
             },
           }).then((result) => {
             if (result.dismiss === Swal.DismissReason.timer) {
-              navigate("/dashboard");
+              navigate("/");
             }
           });
         })

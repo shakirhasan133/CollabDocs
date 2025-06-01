@@ -11,27 +11,51 @@ const DocumentDetails = () => {
   const [editable, setEditable] = useState(false);
   const [fetchData, setFetchData] = useState([]);
   const [title, setTitle] = useState("");
+  const [contentdata, setContentData] = useState();
 
   const socketRef = useRef(null);
-
-  // console.log(content);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
       if (!socketRef.current || !socketRef.current.connected) {
         socketRef.current = io(`${import.meta.env.VITE_Api_URL}`);
         socketRef.current.on("connected", () => {
-          console.log(
-            "Socket.IO সার্ভারের সাথে কানে���্টেড:",
-            socketRef.current.id
-          );
+          // console.log(
+          //   "Socket.IO সার্ভারের সাথে কানেকটেড:",
+          //   socketRef.current.id
+          // );
         });
-        socketRef.on("disconnected", () => {
+
+        // Receive Data from server
+        socketRef.current.on("message", (data) => {
+          console.log(data);
+          setContentData(data);
+        });
+
+        // // Send data to Server
+        // socketRef.current.emit("myData", content);
+
+        socketRef.current.on("disconnected", () => {
           console.log("Disconected");
         });
       }
     }
-  }, []);
+  });
+
+  useEffect(() => {
+    if (socketRef.current) {
+      try {
+        socketRef.current.emit("myData", content);
+        console.log("Emitted:", content);
+      } catch (err) {
+        console.log("Emit error:", err);
+      }
+    }
+  }, [content]);
+
+  // socket.on("connected", () => {
+  //   console.log("Connected");
+  // });
 
   useEffect(() => {
     const loadData = async () => {
@@ -81,7 +105,7 @@ const DocumentDetails = () => {
         <div className="w-full min-h-[60vh]">
           <JoditEditor
             ref={editor}
-            value={fetchData?.details || content}
+            value={contentdata || content}
             tabIndex={1}
             // onChange={setContent}
             onBlur={(newContent) => setContent(newContent)}

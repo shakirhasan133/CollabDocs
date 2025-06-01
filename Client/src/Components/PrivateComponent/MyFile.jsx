@@ -3,6 +3,8 @@ import defaultImg from "../../assets/doc.png";
 import LoadingPage from "../../Pages/LoadingPage";
 import { useNavigate } from "react-router";
 import { CiMenuKebab } from "react-icons/ci";
+import { io } from "socket.io-client";
+import UseAuth from "./../../Hooks/UseAuth";
 
 const MyFile = () => {
   const [documents, setDocuments] = useState([]);
@@ -10,21 +12,57 @@ const MyFile = () => {
   const [openMenuIndex, setOpenMenuIndex] = useState(null);
   const menuRefs = useRef([]);
   const navigate = useNavigate();
+  const { user } = UseAuth();
 
-  console.log(documents);
+  const myFileSocketRef = useRef(null);
+  // const [isConnected, setIsConnected] = useState(false);
 
   useEffect(() => {
-    const fetchData = async () => {
-      const res = await fetch("/file.json");
-      const data = await res.json();
-      setDocuments(data);
-      setLoading(false);
+    // Prevent connecting if no user yet
+    if (!user?.email) return;
+
+    const socket = io(`${import.meta.env.VITE_Api_URL}/my-documents`, {
+      withCredentials: true,
+      transports: ["websocket"],
+    });
+
+    myFileSocketRef.current = socket;
+
+    const handleConnect = () => {
+      // console.log("Connected to socket:", socket.id);
+      socket.emit("sendEmail", { email: user.email });
+
+      socket.on("myDocuments", (data) => {
+        if (data.status === 404) {
+          console.log("Server Data Fetch Error");
+        }
+        // console.log(data);
+        setDocuments(data);
+        setLoading(false);
+      });
     };
-    fetchData();
-  }, []);
+
+    const handleDisconnect = () => {
+      console.log("Disconnected from server");
+      // setIsConnected(false);
+    };
+
+    socket.on("connect", handleConnect);
+    socket.on("disconnect", handleDisconnect);
+
+    // Mark as connected
+    // setIsConnected(true);
+
+    // Cleanup function to avoid multiple sockets
+    return () => {
+      socket.disconnect();
+      socket.off("connect", handleConnect);
+      socket.off("disconnect", handleDisconnect);
+    };
+  }, [user?.email]);
 
   const handleNewDocument = () => {
-    navigate("/dashboard/new-document");
+    navigate("/new-document");
   };
 
   // Close menu on outside click
@@ -46,11 +84,13 @@ const MyFile = () => {
 
   return (
     <div>
-      <section className="container mx-auto py-5 h-full">
+      <section className="container mx-auto px-2 sm:px-4 py-4 h-full min-h-screen">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <h1 className="text-black text-3xl font bold">My Documents</h1>
-          <button className="btn" onClick={handleNewDocument}>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
+          <h1 className="text-black text-2xl sm:text-3xl font-bold">
+            My Documents
+          </h1>
+          <button className="btn w-full sm:w-auto" onClick={handleNewDocument}>
             Create New Documents
           </button>
         </div>
@@ -59,7 +99,7 @@ const MyFile = () => {
 
         {loading && <LoadingPage></LoadingPage>}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 my-5 gap-3">
+        <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 my-5 gap-4">
           {Array.isArray(documents) &&
             documents.map((doc, index) => {
               const title =
@@ -68,22 +108,26 @@ const MyFile = () => {
                   : doc.title;
               return (
                 <div
-                  className="relative p-3 border-2 rounded-md hover:border hover:border-primary transition-all delay-75 cursor-pointer bg-white shadow-sm"
+                  className="relative p-2 sm:p-3 border-2 rounded-md hover:border hover:border-primary transition-all delay-75 cursor-pointer bg-white shadow-sm flex flex-col"
                   key={index}
                 >
-                  <div className="w-full rounded">
+                  <div className="w-full rounded overflow-hidden">
                     <img
                       src={doc?.thumbnailUrl ? doc?.thumbnailUrl : defaultImg}
                       alt=""
-                      className="w-full h-[200px] object-cover rounded"
+                      className="w-full h-40 sm:h-48 md:h-52 object-cover rounded"
                     />
                   </div>
-                  <h1 className="text-black text font-bold pt-3">{title}</h1>
-                  <div className="flex items-center justify-between mt-2">
-                    <p className="text-text text-[14px]">{doc?.lastEdited}</p>
-                    <div className="relative">
+                  <h1 className="text-black text-base sm:text-lg font-bold pt-2 sm:pt-3 break-words">
+                    {title}
+                  </h1>
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mt-2 gap-2">
+                    <p className="text-text text-xs sm:text-[14px]">
+                      {doc?.lastEdited}
+                    </p>
+                    <div className="relative w-full sm:w-auto">
                       <button
-                        className="text-black btn bg-white border-none shadow-none rounded-full hover:bg-gray-200 btn-primary"
+                        className="text-black btn bg-white border-none shadow-none rounded-full hover:bg-gray-200 btn-primary w-full sm:w-auto"
                         onClick={(e) => {
                           e.stopPropagation();
                           setOpenMenuIndex(
@@ -96,14 +140,14 @@ const MyFile = () => {
                         <CiMenuKebab size={22} />
                       </button>
                       {openMenuIndex === index && (
-                        <div className="absolute right-0 top-8 z-20 w-36 bg-white border border-gray-200 rounded-lg shadow-lg flex flex-col animate-fade-in">
-                          <button className="px-4 py-2 text-left hover:bg-blue-50 text-gray-700 rounded-t-lg">
+                        <div className="absolute right-0 top-10 z-20 w-32 sm:w-36 bg-white border border-gray-200 rounded-lg shadow-lg flex flex-col animate-fade-in">
+                          <button className="px-3 py-2 text-left hover:bg-blue-50 text-gray-700 rounded-t-lg text-xs sm:text-sm">
                             Edit
                           </button>
-                          <button className="px-4 py-2 text-left hover:bg-blue-50 text-gray-700">
+                          <button className="px-3 py-2 text-left hover:bg-blue-50 text-gray-700 text-xs sm:text-sm">
                             Delete
                           </button>
-                          <button className="px-4 py-2 text-left hover:bg-blue-50 text-gray-700 rounded-b-lg">
+                          <button className="px-3 py-2 text-left hover:bg-blue-50 text-gray-700 rounded-b-lg text-xs sm:text-sm">
                             Share
                           </button>
                         </div>

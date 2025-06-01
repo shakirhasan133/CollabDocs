@@ -15,46 +15,13 @@ const Navbar = () => {
   const profileMenuRef = useRef(null);
   const profileImageRef = useRef(null);
 
-  console.log(user);
+  // console.log(user);
 
-  const menuItems = {
-    "/dashboard": [
-      { path: "/dashboard/my-documents", label: "My Documents" },
-      { path: "/dashboard/shared", label: "Shared With Me" },
-      { path: "/dashboard/active-user", label: "Active User" },
-    ],
-    "/document": [
-      { path: "#", label: "File" },
-      { path: "#", label: "Edit" },
-      { path: "#", label: "View" },
-      { path: "#", label: "Insert" },
-      { path: "#", label: "Format" },
-      { path: "#", label: "Tools" },
-    ],
-    default: [
-      { path: "/", label: "🏠 Home" },
-      { path: "/about", label: "ℹ️ About" },
-    ],
-  };
-
-  let currentMenuItems = [];
-  if (pathname.startsWith("/dashboard")) {
-    currentMenuItems = menuItems["/dashboard"];
-  } else if (pathname.startsWith("/document")) {
-    currentMenuItems = menuItems["/document"];
-  } else if (pathname.startsWith("/members")) {
-    currentMenuItems = menuItems["/members"];
-  } else if (pathname.startsWith("/collections")) {
-    currentMenuItems = menuItems["/collections"];
-  } else if (pathname.startsWith("/admin")) {
-    currentMenuItems = menuItems["/admin"];
-  }
-
-  if (currentMenuItems.length === 0 && menuItems.default) {
-    if (pathname === "/" || pathname === "/about") {
-      currentMenuItems = menuItems.default;
-    }
-  }
+  const menuItems = [
+    { path: "/my-documents", label: "My Documents" },
+    { path: "/shared", label: "Shared With Me" },
+    { path: "/active-user", label: "Active User" },
+  ];
 
   const toggleProfileMenu = () => {
     setIsProfileMenuOpen(!isProfileMenuOpen);
@@ -102,8 +69,8 @@ const Navbar = () => {
 
         {/* Middle Section - Dynamic Menu */}
         <nav className="hidden md:flex items-center space-x-1 gap-2">
-          {currentMenuItems &&
-            currentMenuItems.map((item) => (
+          {menuItems &&
+            menuItems.map((item) => (
               <Link
                 key={item.path + item.label}
                 to={item.path}
