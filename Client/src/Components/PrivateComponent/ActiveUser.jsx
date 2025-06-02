@@ -26,7 +26,7 @@ const ActiveUser = () => {
       });
     };
     const handleDisconnect = () => {
-      console.log("Disconnected");
+      // console.log("Disconnected");
     };
 
     socket.on("connect", handleConnect);

@@ -73,6 +73,7 @@ const CreateDocuments = io.of("/new-documents");
 const getActiveUsers = io.of("/active-users");
 const getDocumentDetails = io.of("/document-details");
 const documentDetailsUpdate = io.of("/document-details-update");
+const DeleteDocument = io.of("/deleteDocument");
 
 let activeUser = [];
 
@@ -109,6 +110,10 @@ const run = async () => {
       }
       // activeUser.push({ email, name, photoURL });
       getActiveUsers.emit("getActive-User", activeUser);
+
+      socket.emit("newConnectionConfirm", "Hello World");
+
+      //
 
       socket.on("disconnect", () => {
         if (socket.email) {
@@ -249,6 +254,7 @@ const run = async () => {
             $set: {
               title: title,
               details: details,
+              lastEdited: Date.now(),
             },
           };
 
@@ -275,6 +281,60 @@ const run = async () => {
             }
           }
         } catch (error) {}
+      });
+    });
+
+    const handleDeleteOrUnshare = async (email, id) => {
+      try {
+        const query = { _id: new ObjectId(id) };
+        const document = await documentData.findOne(query);
+        // console.log(email, id);
+
+        if (!document) {
+          return { status: "error", message: "Document Not Found" };
+        }
+        if (document.userEmail === email) {
+          const result = await documentData.deleteOne(query);
+          return result;
+        }
+        if (document.sharedWith && document.sharedWith.includes(email)) {
+          const result = await documentData.updateOne(query, {
+            $pull: {
+              sharedWith: email,
+            },
+          });
+
+          return result;
+        }
+
+        return { status: "error", message: "Unauthorized" };
+      } catch (error) {
+        return { status: "error", message: "Server error" };
+      }
+    };
+
+    // Delete a Document
+    DeleteDocument.on("connection", async (socket) => {
+      // const { email, id } = socket.handshake.query;
+      // console.log(email, id);
+
+      socket.on("sendDataForDelete", async (data) => {
+        handleDeleteOrUnshare(data.email, data.id).then(async (res) => {
+          socket.emit("DeleteResult", res);
+
+          if (res.acknowledged) {
+            // Send Updated Data
+            for (const [id, clientSocket] of MyDocument.sockets) {
+              const clientEmail = clientSocket.handshake.query.email;
+              // console.log(clientEmail);
+
+              const query = { userEmail: clientEmail };
+              const result = await documentData.find(query).toArray();
+              // console.log(result);
+              clientSocket.emit("myDocuments", result);
+            }
+          }
+        });
       });
     });
 

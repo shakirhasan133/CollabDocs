@@ -11,11 +11,9 @@ const DocumentDetails = () => {
   const [content, setContent] = useState({});
   const [editable, setEditable] = useState(false);
   const [title, setTitle] = useState("");
-  const [newDetails, setNewDetails] = useState("");
   const { user } = UseAuth();
 
   // Only use id from params, do not fallback
-
   useEffect(() => {
     if (!id || !user) return;
 
@@ -29,7 +27,9 @@ const DocumentDetails = () => {
     socket.on("getDocumentDetails", (data) => {
       // console.log(data);
       setContent(data);
-      setTitle(data.title);
+      if (!editable) {
+        setTitle(data.title);
+      }
     });
 
     const handleDisconnect = () => {
@@ -42,7 +42,7 @@ const DocumentDetails = () => {
       socket.disconnect();
       socket.off("disconnect", handleDisconnect);
     };
-  }, [id, user, content]);
+  }, [id, user, content, editable]);
 
   const updateDataSocketRef = useRef(null);
 
@@ -57,12 +57,13 @@ const DocumentDetails = () => {
     };
   }, []);
 
-  const handleNewDataSubmit = (details) => {
+  const handleNewDataSubmit = (details, title) => {
     const data = { email: user?.email, id: id, title: title, details: details };
     updateDataSocketRef.current?.emit("UpdateDetails", data);
   };
 
   const handleEditable = () => {
+    handleNewDataSubmit(content.details, title);
     setEditable((prev) => !prev);
   };
 
@@ -103,7 +104,7 @@ const DocumentDetails = () => {
             tabIndex={1}
             placeholder=""
             // onChange={setContent}
-            onBlur={(newContent) => handleNewDataSubmit(newContent)}
+            onBlur={(newContent) => handleNewDataSubmit(newContent, title)}
             className="rounded-lg border border-gray-200 shadow-sm text-text"
           />
         </div>
