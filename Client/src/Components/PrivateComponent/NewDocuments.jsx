@@ -25,55 +25,50 @@ const NewDocuments = () => {
     });
     CreateNewDoc.current = socket;
 
-    const NewDocument = () => {
+    socket.on("connect", () => {
       socket.emit("sendEmail", { email: user?.email || "" });
-
       socket.emit("sendNewDocData", data);
+    });
 
-      socket.on("newDoc", (data) => {
-        if (data.status === 200) {
-          //---
-          const Toast = Swal.mixin({
-            toast: true,
-            position: "top-end",
-            showConfirmButton: false,
-            timer: 3000,
-            timerProgressBar: true,
-            didOpen: (toast) => {
-              toast.onmouseenter = Swal.stopTimer;
-              toast.onmouseleave = Swal.resumeTimer;
-            },
-          });
-          Toast.fire({
-            icon: "success",
-            title: "Document Created Successfully",
-          });
-          //----
-          form.reset();
-          navigate(`/documents/${data.id}`);
-        } else {
-          //---
-          const Toast = Swal.mixin({
-            toast: true,
-            position: "top-end",
-            showConfirmButton: false,
-            timer: 3000,
-            timerProgressBar: true,
-            didOpen: (toast) => {
-              toast.onmouseenter = Swal.stopTimer;
-              toast.onmouseleave = Swal.resumeTimer;
-            },
-          });
-          Toast.fire({
-            icon: "error",
-            title: "Something Went Wrong!",
-          });
-          //----
-        }
-      });
-    };
-
-    socket.on("connect", NewDocument);
+    socket.on("newDoc", (data) => {
+      if (data.status === 200) {
+        const Toast = Swal.mixin({
+          toast: true,
+          position: "top-end",
+          showConfirmButton: false,
+          timer: 3000,
+          timerProgressBar: true,
+          didOpen: (toast) => {
+            toast.onmouseenter = Swal.stopTimer;
+            toast.onmouseleave = Swal.resumeTimer;
+          },
+        });
+        Toast.fire({
+          icon: "success",
+          title: "Document Created Successfully",
+        });
+        form.reset();
+        // console.log(data);
+        navigate(`/documents/${data.id}`);
+      } else {
+        const Toast = Swal.mixin({
+          toast: true,
+          position: "top-end",
+          showConfirmButton: false,
+          timer: 3000,
+          timerProgressBar: true,
+          didOpen: (toast) => {
+            toast.onmouseenter = Swal.stopTimer;
+            toast.onmouseleave = Swal.resumeTimer;
+          },
+        });
+        Toast.fire({
+          icon: "error",
+          title: "Something Went Wrong!",
+        });
+      }
+      socket.disconnect(); // Always disconnect after response
+    });
   };
 
   return (

@@ -3,70 +3,64 @@ import { useParams } from "react-router";
 import JoditEditor from "jodit-react";
 import { FiEdit2 } from "react-icons/fi";
 import io from "socket.io-client";
+import UseAuth from "../../Hooks/UseAuth";
 
 const DocumentDetails = () => {
   const { id } = useParams();
   const editor = useRef(null);
-  const [content, setContent] = useState("");
+  const [content, setContent] = useState({});
   const [editable, setEditable] = useState(false);
-  const [fetchData, setFetchData] = useState([]);
   const [title, setTitle] = useState("");
-  const [contentdata, setContentData] = useState();
+  const [newDetails, setNewDetails] = useState("");
+  const { user } = UseAuth();
 
-  const socketRef = useRef(null);
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      if (!socketRef.current || !socketRef.current.connected) {
-        socketRef.current = io(`${import.meta.env.VITE_Api_URL}`);
-        socketRef.current.on("connected", () => {
-          // console.log(
-          //   "Socket.IO সার্ভারের সাথে কানেকটেড:",
-          //   socketRef.current.id
-          // );
-        });
-
-        // Receive Data from server
-        socketRef.current.on("message", (data) => {
-          console.log(data);
-          setContentData(data);
-        });
-
-        // // Send data to Server
-        // socketRef.current.emit("myData", content);
-
-        socketRef.current.on("disconnected", () => {
-          console.log("Disconected");
-        });
-      }
-    }
-  });
+  // Only use id from params, do not fallback
 
   useEffect(() => {
-    if (socketRef.current) {
-      try {
-        socketRef.current.emit("myData", content);
-        console.log("Emitted:", content);
-      } catch (err) {
-        console.log("Emit error:", err);
-      }
-    }
-  }, [content]);
+    if (!id || !user) return;
 
-  // socket.on("connected", () => {
-  //   console.log("Connected");
-  // });
+    const socket = io(`${import.meta.env.VITE_Api_URL}/document-details`, {
+      query: {
+        email: user.email,
+      },
+    });
+    socket.emit("sendDetailsData", { email: user.email, id });
 
-  useEffect(() => {
-    const loadData = async () => {
-      const res = await fetch("/file.json");
-      const data = await res.json();
-      const result = data?.find((doc) => doc.id === id);
-      setFetchData(result);
-      setTitle(result.title);
+    socket.on("getDocumentDetails", (data) => {
+      // console.log(data);
+      setContent(data);
+      setTitle(data.title);
+    });
+
+    const handleDisconnect = () => {
+      console.log("Disconnected");
     };
-    loadData();
-  }, [id]);
+    socket.on("disconnect", handleDisconnect);
+
+    // Cleanup function to avoid multiple sockets
+    return () => {
+      socket.disconnect();
+      socket.off("disconnect", handleDisconnect);
+    };
+  }, [id, user, content]);
+
+  const updateDataSocketRef = useRef(null);
+
+  useEffect(() => {
+    updateDataSocketRef.current = io(
+      `${import.meta.env.VITE_Api_URL}/document-details-update`
+    );
+    return () => {
+      if (updateDataSocketRef.current) {
+        updateDataSocketRef.current.disconnect();
+      }
+    };
+  }, []);
+
+  const handleNewDataSubmit = (details) => {
+    const data = { email: user?.email, id: id, title: title, details: details };
+    updateDataSocketRef.current?.emit("UpdateDetails", data);
+  };
 
   const handleEditable = () => {
     setEditable((prev) => !prev);
@@ -105,10 +99,11 @@ const DocumentDetails = () => {
         <div className="w-full min-h-[60vh]">
           <JoditEditor
             ref={editor}
-            value={contentdata || content}
+            value={content.details}
             tabIndex={1}
+            placeholder=""
             // onChange={setContent}
-            onBlur={(newContent) => setContent(newContent)}
+            onBlur={(newContent) => handleNewDataSubmit(newContent)}
             className="rounded-lg border border-gray-200 shadow-sm text-text"
           />
         </div>

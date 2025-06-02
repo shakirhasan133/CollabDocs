@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import defaultImg from "../../assets/doc.png";
+// import defaultImg from "../../assets/doc.png";
 import LoadingPage from "../../Pages/LoadingPage";
 import { useNavigate } from "react-router";
 import { CiMenuKebab } from "react-icons/ci";
@@ -43,7 +43,7 @@ const MyFile = () => {
     };
 
     const handleDisconnect = () => {
-      console.log("Disconnected from server");
+      // console.log("Disconnected from server");
       // setIsConnected(false);
     };
 
@@ -121,7 +121,11 @@ const MyFile = () => {
                 >
                   <div className="w-full rounded overflow-hidden">
                     <img
-                      src={doc?.thumbnailUrl ? doc?.thumbnailUrl : defaultImg}
+                      src={
+                        doc?.thumbnailUrl
+                          ? doc?.thumbnailUrl
+                          : "https://lh3.googleusercontent.com/aida-public/AB6AXuBQN3JCRNBXOSYVY55dHhH71UiupwzTEk1pNgYXBVWNFIWjdpZ2v7z8mxJxXouzx31CqcvTzkhrimECXilTGCvS3nzTZtnVvQsS2TvZLJU3-qDTExCVur_MP5ymO2sehOJJ0vJ9s61OC4mNYR4Y4xGzBRo6sEI2-KBCLtKHne6lWXQHLHY2RlUU9cLdMvtMiDcFoFWKrlDqssxgF4C8n_OHmBJGzChpk4NgWE-07arKHgjYONfRHuuQ2MyWCu6fwCJyhfnFvophYuYh"
+                      }
                       alt=""
                       className="w-full h-40 sm:h-48 md:h-52 object-cover rounded"
                     />

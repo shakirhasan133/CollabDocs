@@ -6,7 +6,7 @@ const JWT = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
 const http = require("http");
 const { Server } = require("socket.io");
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const app = express();
 const expressServer = http.createServer(app);
 
@@ -55,26 +55,6 @@ app.post("/logout", (req, res) => {
     .send({ success: true });
 });
 
-// Socket Connection Test
-// io.on("connection", (socket) => {
-//   console.log("new user connected", socket.id);
-
-//   // Send Data from server to client
-//   socket.send(data2);
-
-//   // Receive data from client to server
-//   socket.on("myData", (data) => {
-//     // console.log(data);
-//     data2 = data;
-//     console.log(data2);
-//     io.send(data2);
-//   });
-
-//   socket.on("disconnect", () => {
-//     console.log("User Disconnected");
-//   });
-// });
-
 //middleWire
 io.use((socket, next) => {
   const cookie = socket.handshake.headers.cookie;
@@ -86,11 +66,13 @@ io.use((socket, next) => {
   next();
 });
 
-// Get My Documents
+// NameSpace
 const MyDocument = io.of("/my-documents");
 const SharedDocuments = io.of("/shared-documents");
 const CreateDocuments = io.of("/new-documents");
 const getActiveUsers = io.of("/active-users");
+const getDocumentDetails = io.of("/document-details");
+const documentDetailsUpdate = io.of("/document-details-update");
 
 let activeUser = [];
 
@@ -172,12 +154,15 @@ const run = async () => {
 
     // Create New Documents
     CreateDocuments.on("connection", (socket) => {
+      let userEmail = "";
       socket.on("sendEmail", async ({ email }) => {
-        try {
-          socket.on("sendNewDocData", async (data) => {
+        userEmail = email;
+
+        socket.on("sendNewDocData", async (data) => {
+          try {
             const newDoc = {
               title: data.title,
-              userEmail: email,
+              userEmail: userEmail,
               description: data.description,
               details: "",
               thumbnailUrl: "",
@@ -188,13 +173,12 @@ const run = async () => {
               permissions: "",
             };
             const result = await documentData.insertOne(newDoc);
-
             // console.log(result);
-
             if (result.acknowledged === true) {
               socket.emit("newDoc", {
                 status: 200,
                 message: "New Document Created",
+                id: result.insertedId,
               });
 
               // send data to shared email
@@ -214,10 +198,82 @@ const run = async () => {
               socket.emit("newDoc", {
                 status: 404,
                 message: "Something Went Wrong",
-                id: insertedId,
               });
             }
+          } catch (error) {
+            console.log("From CreatedDoc", error);
+          }
+        });
+      });
+    });
+
+    // Get Documents Details
+    getDocumentDetails.on("connection", (socket) => {
+      socket.on("sendDetailsData", async (data) => {
+        const { email, id } = data;
+
+        try {
+          const query = {
+            _id: new ObjectId(id),
+            $or: [{ userEmail: email }, { sharedWith: { $in: [email] } }],
+          };
+
+          const result = await documentData.findOne(query);
+
+          socket.emit("getDocumentDetails", result);
+        } catch (error) {
+          console.error("Error fetching document:", error);
+          socket.emit("getDocumentDetails", {
+            error: "Failed to fetch document",
           });
+        }
+      });
+    });
+
+    // Update Document Data
+    documentDetailsUpdate.on("connection", (socket) => {
+      // console.log("User Connected", socket.id);
+
+      socket.on("UpdateDetails", async (data) => {
+        // console.log(data);
+
+        const { email, id, title, details } = data;
+
+        try {
+          const query = {
+            _id: new ObjectId(id),
+            $or: [{ userEmail: email }, { sharedWith: { $in: [email] } }],
+          };
+
+          const upDoc = {
+            $set: {
+              title: title,
+              details: details,
+            },
+          };
+
+          const result = await documentData.updateOne(query, upDoc);
+          // console.log(result);
+          if (result.acknowledged === true) {
+            const updateDoc = await documentData.findOne({
+              _id: new ObjectId(id),
+            });
+            for (const [id, clientSocket] of getDocumentDetails.sockets) {
+              const clientEmail = clientSocket.handshake.query.email;
+
+              if (
+                updateDoc.userEmail === clientEmail ||
+                updateDoc.sharedWith.includes(clientEmail)
+              ) {
+                const query = {
+                  _id: new ObjectId(id),
+                  $or: [{ userEmail: email }, { sharedWith: { $in: [email] } }],
+                };
+                const data = await documentData.findOne(query);
+                clientSocket.emit("getDocumentDetails", data);
+              }
+            }
+          }
         } catch (error) {}
       });
     });

@@ -50,10 +50,10 @@ const Navbar = () => {
     });
 
     const handleConnect = () => {
-      console.log("Connected to server");
+      // console.log("Connected to server");
     };
     const handleDisconnect = () => {
-      console.log("Disconnected");
+      // console.log("Disconnected");
     };
 
     socket.on("connect", handleConnect);
