@@ -90,6 +90,9 @@ io.use((socket, next) => {
 const MyDocument = io.of("/my-documents");
 const SharedDocuments = io.of("/shared-documents");
 const CreateDocuments = io.of("/new-documents");
+const getActiveUsers = io.of("/active-users");
+
+let activeUser = [];
 
 // MongoDB
 const uri = `mongodb+srv://${process.env.DB_UserName}:${process.env.DB_Password}@collabdocs.rbgkqis.mongodb.net/?retryWrites=true&w=majority&appName=CollabDocs`;
@@ -108,6 +111,35 @@ const run = async () => {
 
     const database = Client.db("CollabDocs");
     const documentData = database.collection("Documents");
+
+    // Get Active Users List
+    getActiveUsers.on("connection", (socket) => {
+      const { email, name, photoURL } = socket.handshake.query;
+
+      socket.email = email;
+
+      if (
+        activeUser.length === 0 ||
+        !activeUser.some((user) => user.email === email)
+      ) {
+        activeUser.push({ email, name, photoURL });
+        getActiveUsers.emit("getActive-User", activeUser);
+      }
+      // activeUser.push({ email, name, photoURL });
+      getActiveUsers.emit("getActive-User", activeUser);
+
+      socket.on("disconnect", () => {
+        if (socket.email) {
+          const index = activeUser.findIndex(
+            (user) => user.email === socket.email
+          );
+          if (index !== -1) {
+            activeUser.splice(index, 1);
+            getActiveUsers.emit("getActive-User", activeUser);
+          }
+        }
+      });
+    });
 
     // Get My Documents
     MyDocument.on("connection", (socket) => {
@@ -165,7 +197,7 @@ const run = async () => {
                 message: "New Document Created",
               });
 
-              // সকল কানেক্টেড ক্লায়েন্টের মধ্যে যাদের email মিলে, তাদের কাছে ডেটা পাঠান
+              // send data to shared email
               for (const [id, clientSocket] of SharedDocuments.sockets) {
                 const userEmail = clientSocket.handshake.query.email;
                 if (newDoc.sharedWith.includes(userEmail)) {

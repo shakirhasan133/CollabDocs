@@ -17,8 +17,6 @@ const LoginPage = () => {
 
   // Handle Log in with Google
 
-  // Handle Log in with Google
-
   const handleLoginWithGoolge = () => {
     logInWithGoogle()
       .then(() => {
@@ -86,20 +84,22 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="h-screen w-full flex items-center flex-col justify-center bg-background">
-      <section className="flex  gap-2 w-4xl bg-white rounded-xl shadow-2xl">
+    <div className="min-h-screen w-full flex items-center justify-center bg-background px-2 py-6">
+      <section className="flex flex-col md:flex-row gap-2 w-full max-w-4xl bg-white rounded-xl shadow-2xl overflow-hidden">
         {/* Left Side - Image */}
-        <div className="w-1/2  overflow-hidden flex flex-col items-center justify-center ">
-          <h1 className="text-4xl font-bold text-black">CollabDocs</h1>
+        <div className="w-full md:w-1/2 flex flex-col items-center justify-center p-4 bg-white">
+          <h1 className="text-3xl md:text-4xl font-bold text-black mb-2 md:mb-0">
+            CollabDocs
+          </h1>
           <Lottie
-            className="w-[400px] -mt-8 "
+            className="w-60 md:w-[400px] -mt-4 md:-mt-8"
             animationData={loginImage}
           ></Lottie>
         </div>
 
         {/* Right Side - Login Form */}
-        <div className="flex items-center w-1/2">
-          <div className="w-full max-w-md bg-white p-8 ">
+        <div className="flex items-center w-full md:w-1/2 p-4">
+          <div className="w-full max-w-md bg-white p-4 md:p-8 mx-auto">
             <h1 className="text-3xl font-bold text-gray-800 mb-2 text-center">
               Welcome Back!
             </h1>

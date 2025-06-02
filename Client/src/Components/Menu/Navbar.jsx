@@ -4,6 +4,7 @@ import logo from "../../assets/logo.png";
 import React, { useState, useEffect, useRef } from "react";
 import { IoIosClose } from "react-icons/io";
 import { PiSignOutBold } from "react-icons/pi";
+import { io } from "socket.io-client";
 
 const Navbar = () => {
   const { user, signOutUser } = UseAuth();
@@ -37,6 +38,35 @@ const Navbar = () => {
       });
   };
 
+  // Get Active User
+  useEffect(() => {
+    if (!user) return;
+    const socket = io(`${import.meta.env.VITE_Api_URL}/active-users`, {
+      query: {
+        email: user?.email,
+        name: user?.displayName,
+        photoURL: user?.photoURL,
+      },
+    });
+
+    const handleConnect = () => {
+      console.log("Connected to server");
+    };
+    const handleDisconnect = () => {
+      console.log("Disconnected");
+    };
+
+    socket.on("connect", handleConnect);
+    socket.on("disconnect", handleDisconnect);
+
+    // Cleanup function to avoid multiple sockets
+    return () => {
+      socket.disconnect();
+      socket.off("connect", handleConnect);
+      socket.off("disconnect", handleDisconnect);
+    };
+  }, [user]);
+
   useEffect(() => {
     function handleClickOutside(event) {
       if (
@@ -58,7 +88,7 @@ const Navbar = () => {
   const firstName = user?.displayName?.split(" ")[0] || "User";
 
   return (
-    <div className="container mx-auto py-2 border-b-2">
+    <div className="container mx-auto py-2 border-b-2 sticky top-0 z-50 bg-white">
       <section className="flex items-center justify-between ">
         {/* Left Section - Logo */}
         <div className="flex items-center">
@@ -130,6 +160,22 @@ const Navbar = () => {
 
                   <div className="py-2">
                     <div className="space-y-1 mt-2">
+                      <nav className="flex flex-col md:hidden items-center space-x-1 gap-2">
+                        {menuItems &&
+                          menuItems.map((item) => (
+                            <Link
+                              key={item.path + item.label}
+                              to={item.path}
+                              className={`px-3 py-2 rounded-md text-sm font-medium w-full ${
+                                pathname === item.path
+                                  ? "bg-gray-700 text-white"
+                                  : "text-gray-700 hover:bg-gray-200 hover:text-black"
+                              }`}
+                            >
+                              {item.label}
+                            </Link>
+                          ))}
+                      </nav>
                       <button
                         onClick={handleSignOut}
                         className="w-full flex items-center text-gray-700 hover:bg-gray-100 py-2.5 px-3 rounded-lg text-sm transition-colors duration-150"

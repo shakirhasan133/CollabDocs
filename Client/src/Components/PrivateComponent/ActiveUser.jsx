@@ -1,42 +1,106 @@
-const ActiveUser = () => {
-  return (
-    <div className="container mx-auto min-h-screen">
-      <section className=" py-5">
-        <h1 className="text-3xl text-text font-bold py-5">Active Users</h1>
+import { useEffect, useState } from "react";
+import { io } from "socket.io-client";
+import LoadingPage from "../../Pages/LoadingPage";
+import UseAuth from "../../Hooks/UseAuth";
 
-        <div className="flex overflow-hidden rounded-lg border border-[#cfd8e7] bg-[#f8f9fc]">
-          <table className="flex-1">
-            <thead>
-              <tr className="bg-[#f8f9fc]">
-                <th className=" px-4 py-3 text-left text-[#0d131b] w-14 text-sm font-medium leading-normal">
+const ActiveUser = () => {
+  const [activeUser, setActiveUser] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const { user } = UseAuth();
+
+  // Get Active User
+  useEffect(() => {
+    if (!user) return;
+    const socket = io(`${import.meta.env.VITE_Api_URL}/active-users`, {
+      query: {
+        email: user?.email,
+        name: user?.displayName,
+        photoURL: user?.photoURL,
+      },
+    });
+
+    const handleConnect = () => {
+      socket.on("getActive-User", (activeUserList) => {
+        setActiveUser(activeUserList);
+        setLoading(false);
+      });
+    };
+    const handleDisconnect = () => {
+      console.log("Disconnected");
+    };
+
+    socket.on("connect", handleConnect);
+    socket.on("disconnect", handleDisconnect);
+
+    // Cleanup function to avoid multiple sockets
+    return () => {
+      socket.disconnect();
+      socket.off("connect", handleConnect);
+      socket.off("disconnect", handleDisconnect);
+    };
+  }, [user]);
+
+  if (loading || !user) {
+    return <LoadingPage />;
+  }
+
+  return (
+    <div className="container mx-auto min-h-screen px-2 sm:px-4">
+      <section className=" py-5">
+        <h1 className="text-2xl sm:text-3xl text-gray-800 font-bold py-5">
+          Active Users
+        </h1>
+        <div className="overflow-x-auto rounded-lg border border-gray-200 bg-gray-50 shadow-sm">
+          <table className="w-full min-w-[540px]">
+            <thead className="bg-gray-100">
+              <tr>
+                <th className="px-4 py-3 text-left text-xs sm:text-sm font-semibold text-gray-600 uppercase tracking-wider w-16 sm:w-20">
                   Photo
                 </th>
-                <th className="px-4 py-3 text-left text-[#0d131b] w-[400px] text-sm font-medium leading-normal">
+                <th className="px-4 py-3 text-left text-xs sm:text-sm font-semibold text-gray-600 uppercase tracking-wider min-w-[150px]">
                   User
                 </th>
-                <th className=" px-4 py-3 text-left text-[#0d131b] w-[400px] text-sm font-medium leading-normal">
+                <th className="px-4 py-3 text-left text-xs sm:text-sm font-semibold text-gray-600 uppercase tracking-wider min-w-[200px]">
                   Email
                 </th>
               </tr>
             </thead>
-            <tbody>
-              <tr className="border-t border-t-[#cfd8e7]">
-                <td className=" h-[72px] px-4 py-2 w-14 text-sm">
-                  <div className="rounded-full w-10">
-                    <img
-                      src="https://lh3.googleusercontent.com/aida-public/AB6AXuDz5-StoPbK4UtgFuTPDQSSgVUOkemHf9f8qJMU0s1l6bYPm9nDrfE1oPD6A2nG1Vg2sVCWn73fVVAowOhTvUZbfj-1I8cJLStoaVFOeKh3TMjVeas2oZLpXUWUGuGOD8MNlBRK587F7HA4gAGMLo6yizcDtaUL5Rv5uqCc1qLlvWYkrellXcRgqMIJAIxJInMWw1HOAjCOQIOzWKJxU2KYkq3Mzc4ueUTa3opqZ4zTFNEPh-jNHIwqR7bqewPUXMHCk2xKE_glBf4e"
-                      alt=""
-                      className="rounded-full"
-                    />
-                  </div>
-                </td>
-                <td className=" h-[72px] px-4 py-2 w-[400px] text-[#0d131b] text-sm font-normal leading-normal">
-                  Sophia Carter
-                </td>
-                <td className=" h-[72px] px-4 py-2 w-[400px] text-[#4c6a9a] text-sm font-normal leading-normal">
-                  sophia.carter@email.com
-                </td>
-              </tr>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {activeUser.length > 0 ? (
+                activeUser.map((user, index) => (
+                  <tr
+                    key={index}
+                    className="hover:bg-gray-50 transition-colors"
+                  >
+                    <td className="px-4 py-3 whitespace-nowrap w-16 sm:w-20">
+                      <div className="flex-shrink-0 h-10 w-10">
+                        <img
+                          src={user.photoURL || "https://placehold.co/40"}
+                          alt={`${user.name}'s photo`}
+                          className="h-10 w-10 rounded-full object-cover"
+                        />
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap min-w-[150px]">
+                      <div className="text-sm font-medium text-gray-900">
+                        {user.name}
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap min-w-[200px]">
+                      <div className="text-sm text-gray-500">{user.email}</div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td
+                    colSpan="3"
+                    className="px-4 py-8 text-center text-gray-500"
+                  >
+                    No active users found.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
