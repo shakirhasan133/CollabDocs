@@ -11,14 +11,14 @@ const app = express();
 const expressServer = http.createServer(app);
 
 const corsOption = {
-  origin: ["http://localhost:5173"],
+  origin: ["http://localhost:5173", "https://collab-docs-ruddy.vercel.app"],
   credentials: true,
   optionsSuccessStatus: 200,
 };
 
 const io = new Server(expressServer, {
   cors: {
-    origin: "http://localhost:5173",
+    origin: ["http://localhost:5173", "https://collab-docs-ruddy.vercel.app"],
     methods: ["GET", "POST"],
     credentials: true,
   },
