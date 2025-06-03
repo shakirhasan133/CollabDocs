@@ -10,10 +10,8 @@ import Swal from "sweetalert2";
 const MyFile = () => {
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [openMenuIndex, setOpenMenuIndex] = useState(null);
-  const menuRefs = useRef([]);
   const navigate = useNavigate();
-  const { user, publicSocket } = UseAuth();
+  const { user } = UseAuth();
 
   const myFileSocketRef = useRef(null);
   // const [isConnected, setIsConnected] = useState(false);
@@ -125,7 +123,21 @@ const MyFile = () => {
       showCancelButton: true,
     });
     if (email) {
-      Swal.fire(`Entered email: ${email}`);
+      const socket = io(`${import.meta.env.VITE_Api_URL}/share-with-others`, {
+        query: { email: user.email || "email not found", id: id },
+      });
+      socket.emit("getShareWithEmail", email);
+
+      socket.on("shareResponse", (res) => {
+        if (res.status === true) {
+          Swal.fire(`Share Successful: ${email}`);
+        }
+        if (res.status === false) {
+          Swal.fire("Something Went Wrong");
+        }
+      });
+
+      //
     }
   };
 

@@ -74,6 +74,7 @@ const getActiveUsers = io.of("/active-users");
 const getDocumentDetails = io.of("/document-details");
 const documentDetailsUpdate = io.of("/document-details-update");
 const DeleteDocument = io.of("/deleteDocument");
+const ShareWithOther = io.of("/share-with-others");
 
 let activeUser = [];
 
@@ -94,11 +95,42 @@ const run = async () => {
 
     const database = Client.db("CollabDocs");
     const documentData = database.collection("Documents");
+    const UserData = database.collection("Users");
+
+    // set User Data at DB
+    app.post("/users/:email", async (req, res) => {
+      try {
+        const email = req.params.email;
+        const query = { email };
+        const user = req.body;
+
+        const isExist = await UserData.findOne(query);
+        if (isExist) {
+          return;
+          // res.send("Already Registered");
+        }
+
+        const result = await UserData.insertOne({
+          ...user,
+          role: "User",
+          timestamp: Date.now(),
+        });
+
+        res.send(result);
+      } catch (error) {
+        console.error("Error:", error);
+        res.status(500).send({ message: "Internal Server Error" });
+      }
+    });
 
     // Get Active Users List
     getActiveUsers.on("connection", (socket) => {
       const { email, name, photoURL } = socket.handshake.query;
 
+      socket.on("getOfflineUserData", (data) => {
+        const email = data.email;
+        console.log(email);
+      });
       socket.email = email;
 
       if (
@@ -276,6 +308,7 @@ const run = async () => {
                   $or: [{ userEmail: email }, { sharedWith: { $in: [email] } }],
                 };
                 const data = await documentData.findOne(query);
+
                 clientSocket.emit("getDocumentDetails", data);
               }
             }
@@ -326,13 +359,74 @@ const run = async () => {
             // Send Updated Data
             for (const [id, clientSocket] of MyDocument.sockets) {
               const clientEmail = clientSocket.handshake.query.email;
-              // console.log(clientEmail);
-
               const query = { userEmail: clientEmail };
               const result = await documentData.find(query).toArray();
-              // console.log(result);
               clientSocket.emit("myDocuments", result);
             }
+
+            for (const [id, clientSocket] of SharedDocuments.sockets) {
+              const clientEmail = clientSocket.handshake.query.email;
+              const query2 = {
+                sharedWith: {
+                  $in: [clientEmail],
+                },
+              };
+              const result2 = await documentData.find(query2).toArray();
+              clientSocket.emit("sharedDocuments", result2);
+            }
+          }
+        });
+      });
+    });
+
+    // HandleShareFunctionalily
+    const handleShare = async (email, id, shareemail) => {
+      // console.log(email, id, shareemail);
+      try {
+        const query = { _id: new ObjectId(id), userEmail: email };
+        const document = await documentData.findOne(query);
+        if (!document) {
+          return { status: "error", message: "Document not found" };
+        }
+        if (document) {
+          const upDoc = {
+            $addToSet: {
+              sharedWith: shareemail,
+            },
+          };
+          const result = await documentData.updateOne(query, upDoc);
+          return result;
+        }
+      } catch (error) {}
+    };
+    // Shared Documents
+    ShareWithOther.on("connection", (socket) => {
+      const { email, id } = socket.handshake.query;
+
+      socket.on("getShareWithEmail", (data) => {
+        handleShare(email, id, data).then(async (res) => {
+          // console.log(res);
+          if (res && res.acknowledged === true) {
+            // Send Response
+            socket.emit("shareResponse", {
+              status: true,
+              message: "Share successful",
+            });
+            for (const [id, clientSocket] of SharedDocuments.sockets) {
+              const clientEmail = clientSocket.handshake.query.email;
+              const query2 = {
+                sharedWith: {
+                  $in: [clientEmail],
+                },
+              };
+              const result2 = await documentData.find(query2).toArray();
+              clientSocket.emit("sharedDocuments", result2);
+            }
+          } else {
+            socket.emit("shareResponse", {
+              status: false,
+              message: "Something went wrong",
+            });
           }
         });
       });

@@ -5,6 +5,7 @@ import { useNavigate } from "react-router";
 import UseAuth from "../../Hooks/UseAuth";
 import { io } from "socket.io-client";
 import Card from "../Shared/Card";
+import Swal from "sweetalert2";
 
 const SharedDocument = () => {
   const [documents, setDocuments] = useState([]);
@@ -60,7 +61,7 @@ const SharedDocument = () => {
       socket.off("connect", handleConnect);
       socket.off("disconnect", handleDisconnect);
     };
-  }, [user?.email]);
+  }, [user?.email, documents]);
 
   const handleNewDocument = () => {
     navigate("/new-document");
@@ -82,6 +83,54 @@ const SharedDocument = () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [openMenuIndex]);
+
+  // Edit Button
+  const handleEdit = (id) => {
+    navigate(`/documents/${id}`);
+  };
+
+  // Delete Button
+  const handleDeleteBtn = (id) => {
+    const socket = io(`${import.meta.env.VITE_Api_URL}/deleteDocument`);
+    socket.emit("sendDataForDelete", { email: user?.email, id: id });
+    socket.on("DeleteResult", (data) => {
+      // console.log(data);
+      if (data.acknowledged === true) {
+        const Toast = Swal.mixin({
+          toast: true,
+          position: "top-end",
+          showConfirmButton: false,
+          timer: 3000,
+          timerProgressBar: true,
+          didOpen: (toast) => {
+            toast.onmouseenter = Swal.stopTimer;
+            toast.onmouseleave = Swal.resumeTimer;
+          },
+        });
+        Toast.fire({
+          icon: "success",
+          title: "Document Deleted Successfully",
+        });
+      }
+      if (data.status === "error") {
+        const Toast = Swal.mixin({
+          toast: true,
+          position: "top-end",
+          showConfirmButton: false,
+          timer: 3000,
+          timerProgressBar: true,
+          didOpen: (toast) => {
+            toast.onmouseenter = Swal.stopTimer;
+            toast.onmouseleave = Swal.resumeTimer;
+          },
+        });
+        Toast.fire({
+          icon: "error",
+          title: "Something Went Wrong",
+        });
+      }
+    });
+  };
 
   return (
     <div>
@@ -116,7 +165,14 @@ const SharedDocument = () => {
                   ? doc.title.slice(0, 25) + "..."
                   : doc.title;
               return (
-                <Card doc={doc} title={title} key={index} index={index}></Card>
+                <Card
+                  doc={doc}
+                  title={title}
+                  key={index}
+                  index={index}
+                  handleDeleteBtn={handleDeleteBtn}
+                  handleEdit={handleEdit}
+                ></Card>
               );
             })}
         </div>

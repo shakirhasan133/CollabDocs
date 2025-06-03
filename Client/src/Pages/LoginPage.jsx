@@ -6,6 +6,7 @@ import UseAuth from "../Hooks/UseAuth";
 import { Link, useNavigate } from "react-router";
 import { FaRegEye, FaRegEyeSlash } from "react-icons/fa";
 import Swal from "sweetalert2";
+import { SaveUser } from "../Utils/utils";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
@@ -19,7 +20,8 @@ const LoginPage = () => {
 
   const handleLoginWithGoolge = () => {
     logInWithGoogle()
-      .then(() => {
+      .then(async (data) => {
+        await SaveUser(data.user);
         let timerInterval;
         Swal.fire({
           title: "Log in Successful",

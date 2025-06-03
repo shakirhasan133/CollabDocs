@@ -10,7 +10,7 @@ import {
 } from "firebase/auth";
 import { auth, provider } from "./../Firebase/firebase.config";
 import axios from "axios";
-import { io } from "socket.io-client";
+// import { io } from "socket.io-client";
 
 const AuthProvider = ({ children }) => {
   const [user, setUser] = useState({});
@@ -18,33 +18,33 @@ const AuthProvider = ({ children }) => {
 
   let publicSocket = useRef(null);
 
-  useEffect(() => {
-    if (!user) return;
-    const pSocket = io(`${import.meta.env.VITE_Api_URL}/active-users`, {
-      query: {
-        email: user?.email,
-        name: user?.displayName,
-        photoURL: user?.photoURL,
-      },
-    });
-    publicSocket.current = pSocket;
-    const handleConnect = () => {
-      // console.log("Connected to server");
-    };
-    const handleDisconnect = () => {
-      // console.log("Disconnected");
-    };
+  // useEffect(() => {
+  //   if (!user) return;
+  //   const pSocket = io(`${import.meta.env.VITE_Api_URL}/active-users`, {
+  //     query: {
+  //       email: user?.email,
+  //       name: user?.displayName,
+  //       photoURL: user?.photoURL,
+  //     },
+  //   });
+  //   publicSocket.current = pSocket;
+  //   const handleConnect = () => {
+  //     // console.log("Connected to server");
+  //   };
+  //   const handleDisconnect = () => {
+  //     // console.log("Disconnected");
+  //   };
 
-    pSocket.on("connect", handleConnect);
-    pSocket.on("disconnect", handleDisconnect);
+  //   pSocket.on("connect", handleConnect);
+  //   pSocket.on("disconnect", handleDisconnect);
 
-    // Cleanup function to avoid multiple sockets
-    return () => {
-      pSocket.disconnect();
-      pSocket.off("connect", handleConnect);
-      pSocket.off("disconnect", handleDisconnect);
-    };
-  }, [user]);
+  //   // Cleanup function to avoid multiple sockets
+  //   return () => {
+  //     pSocket.disconnect();
+  //     pSocket.off("connect", handleConnect);
+  //     pSocket.off("disconnect", handleDisconnect);
+  //   };
+  // }, [user]);
 
   //Log in with google
   const logInWithGoogle = () => {

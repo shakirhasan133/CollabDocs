@@ -39,33 +39,41 @@ const Navbar = () => {
   };
 
   // Get Active User
-  // useEffect(() => {
-  //   if (!user) return;
-  //   const socket = io(`${import.meta.env.VITE_Api_URL}/active-users`, {
-  //     query: {
-  //       email: user?.email,
-  //       name: user?.displayName,
-  //       photoURL: user?.photoURL,
-  //     },
-  //   });
+  useEffect(() => {
+    if (!user) return;
+    const socket = io(`${import.meta.env.VITE_Api_URL}/active-users`, {
+      query: {
+        email: user?.email,
+        name: user?.displayName,
+        photoURL: user?.photoURL,
+      },
+    });
 
-  //   const handleConnect = () => {
-  //     // console.log("Connected to server");
-  //   };
-  //   const handleDisconnect = () => {
-  //     // console.log("Disconnected");
-  //   };
+    const handleConnect = () => {
+      const data = {
+        email: user?.email,
+        name: user?.displayName,
+        photoURL: user?.photoURL,
+      };
+      socket.emit("getActiveUserData", data);
+    };
+    const handleDisconnect = () => {
+      const data = {
+        email: user?.email,
+      };
+      socket.emit("getOfflineUserData", data);
+    };
 
-  //   socket.on("connect", handleConnect);
-  //   socket.on("disconnect", handleDisconnect);
+    socket.on("connect", handleConnect);
+    socket.on("disconnect", handleDisconnect);
 
-  //   // Cleanup function to avoid multiple sockets
-  //   return () => {
-  //     socket.disconnect();
-  //     socket.off("connect", handleConnect);
-  //     socket.off("disconnect", handleDisconnect);
-  //   };
-  // }, [user]);
+    // Cleanup function to avoid multiple sockets
+    return () => {
+      socket.disconnect();
+      socket.off("connect", handleConnect);
+      socket.off("disconnect", handleDisconnect);
+    };
+  }, [user]);
 
   useEffect(() => {
     function handleClickOutside(event) {

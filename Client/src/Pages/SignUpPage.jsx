@@ -4,7 +4,7 @@ import Lottie from "lottie-react";
 import { FcGoogle } from "react-icons/fc";
 import UseAuth from "../Hooks/UseAuth";
 import { Link, useNavigate } from "react-router";
-import { imageUpload } from "../Utils/utils";
+import { imageUpload, SaveUser } from "../Utils/utils";
 import Swal from "sweetalert2";
 import { FaRegEye, FaRegEyeSlash } from "react-icons/fa";
 
@@ -21,7 +21,8 @@ const SignUpPage = () => {
 
   const handleLoginWithGoolge = () => {
     logInWithGoogle()
-      .then(() => {
+      .then(async (data) => {
+        await SaveUser(data.user);
         let timerInterval;
         Swal.fire({
           title: "Log in Successful",
@@ -66,8 +67,9 @@ const SignUpPage = () => {
 
     try {
       signUpNewUser(email, password)
-        .then(async () => {
-          await updateUserData(name, image).then(() => {
+        .then(async (data) => {
+          await updateUserData(name, image).then(async () => {
+            await SaveUser(data.user);
             let timerInterval;
             Swal.fire({
               title: "Sign up successful",
