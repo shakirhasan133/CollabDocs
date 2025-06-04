@@ -15,13 +15,10 @@ const Navbar = () => {
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const profileMenuRef = useRef(null);
   const profileImageRef = useRef(null);
-
-  // console.log(user);
-
   const menuItems = [
     { path: "/my-documents", label: "My Documents" },
     { path: "/shared", label: "Shared With Me" },
-    { path: "/active-user", label: "Active User" },
+    // { path: "/active-user", label: "Active User" },
   ];
 
   const toggleProfileMenu = () => {

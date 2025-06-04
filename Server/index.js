@@ -76,7 +76,7 @@ const documentDetailsUpdate = io.of("/document-details-update");
 const DeleteDocument = io.of("/deleteDocument");
 const ShareWithOther = io.of("/share-with-others");
 
-let activeUser = [];
+let onlineUsers = [];
 
 // MongoDB
 const uri = `mongodb+srv://${process.env.DB_UserName}:${process.env.DB_Password}@collabdocs.rbgkqis.mongodb.net/?retryWrites=true&w=majority&appName=CollabDocs`;
@@ -123,48 +123,38 @@ const run = async () => {
       }
     });
 
-    // Get Active Users List
-    getActiveUsers.on("connection", (socket) => {
-      const { email, name, photoURL } = socket.handshake.query;
+    // Online User in a document
+    io.of("/document-room").on("connection", (socket) => {
+      socket.on("join-document", (data) => {
+        const { name, photo, email } = data;
+        const userData = {
+          SocketID: socket.id,
+          UserName: name,
+          UserPhoto: photo,
+          userEmail: email,
+        };
 
-      socket.on("getOfflineUserData", (data) => {
-        const email = data.email;
-        console.log(email);
+        // console.log(userData);
+        const isData = onlineUsers.find(
+          (data) => data.userEmail === userData.userEmail
+        );
+        if (!isData) {
+          onlineUsers.push(userData);
+          // console.log(onlineUsers.length);
+        }
+
+        io.of("/document-room").emit("GetOnlineUser", onlineUsers);
       });
-      socket.email = email;
-
-      if (
-        activeUser.length === 0 ||
-        !activeUser.some((user) => user.email === email)
-      ) {
-        activeUser.push({ email, name, photoURL });
-        getActiveUsers.emit("getActive-User", activeUser);
-      }
-      // activeUser.push({ email, name, photoURL });
-      getActiveUsers.emit("getActive-User", activeUser);
-
-      socket.emit("newConnectionConfirm", "Hello World");
-
-      //
 
       socket.on("disconnect", () => {
-        if (socket.email) {
-          const index = activeUser.findIndex(
-            (user) => user.email === socket.email
-          );
-          if (index !== -1) {
-            activeUser.splice(index, 1);
-            getActiveUsers.emit("getActive-User", activeUser);
-          }
-        }
+        onlineUsers = onlineUsers.filter((data) => data.SocketID !== socket.id);
+        io.of("/document-room").emit("GetOnlineUser", onlineUsers);
       });
     });
 
     // Get My Documents
     MyDocument.on("connection", (socket) => {
       socket.on("sendEmail", async ({ email }) => {
-        // console.log(email);
-
         try {
           const result = await documentData
             .find({ userEmail: email })
@@ -248,15 +238,12 @@ const run = async () => {
     getDocumentDetails.on("connection", (socket) => {
       socket.on("sendDetailsData", async (data) => {
         const { email, id } = data;
-
         try {
           const query = {
             _id: new ObjectId(id),
             $or: [{ userEmail: email }, { sharedWith: { $in: [email] } }],
           };
-
           const result = await documentData.findOne(query);
-
           socket.emit("getDocumentDetails", result);
         } catch (error) {
           console.error("Error fetching document:", error);
@@ -265,23 +252,23 @@ const run = async () => {
           });
         }
       });
+      socket.on("disconnect", () => {});
     });
 
     // Update Document Data
     documentDetailsUpdate.on("connection", (socket) => {
-      // console.log("User Connected", socket.id);
-
       socket.on("UpdateDetails", async (data) => {
-        // console.log(data);
-
         const { email, id, title, details } = data;
+
+        // New Code
+        const documentId = id;
+        socket.join(documentId);
 
         try {
           const query = {
             _id: new ObjectId(id),
             $or: [{ userEmail: email }, { sharedWith: { $in: [email] } }],
           };
-
           const upDoc = {
             $set: {
               title: title,
@@ -289,9 +276,7 @@ const run = async () => {
               lastEdited: Date.now(),
             },
           };
-
           const result = await documentData.updateOne(query, upDoc);
-          // console.log(result);
           if (result.acknowledged === true) {
             const updateDoc = await documentData.findOne({
               _id: new ObjectId(id),
@@ -348,9 +333,6 @@ const run = async () => {
 
     // Delete a Document
     DeleteDocument.on("connection", async (socket) => {
-      // const { email, id } = socket.handshake.query;
-      // console.log(email, id);
-
       socket.on("sendDataForDelete", async (data) => {
         handleDeleteOrUnshare(data.email, data.id).then(async (res) => {
           socket.emit("DeleteResult", res);
@@ -399,12 +381,14 @@ const run = async () => {
         }
       } catch (error) {}
     };
+
     // Shared Documents
     ShareWithOther.on("connection", (socket) => {
       const { email, id } = socket.handshake.query;
 
       socket.on("getShareWithEmail", (data) => {
-        handleShare(email, id, data).then(async (res) => {
+        const { email, id, shareEmail } = data;
+        handleShare(email, id, shareEmail).then(async (res) => {
           // console.log(res);
           if (res && res.acknowledged === true) {
             // Send Response

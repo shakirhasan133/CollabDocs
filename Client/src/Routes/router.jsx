@@ -36,10 +36,6 @@ export const router = createBrowserRouter([
         element: <NewDocuments></NewDocuments>,
       },
       {
-        path: "active-user",
-        element: <ActiveUser></ActiveUser>,
-      },
-      {
         path: "documents/:id",
         element: <DocumentDetails></DocumentDetails>,
       },

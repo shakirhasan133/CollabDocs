@@ -115,6 +115,7 @@ const MyFile = () => {
 
   //   Handle Share Button
   const handleShareButton = async (id) => {
+    // console.log(id);
     const { value: email } = await Swal.fire({
       title: "Input email address",
       input: "email",
@@ -123,10 +124,17 @@ const MyFile = () => {
       showCancelButton: true,
     });
     if (email) {
+      const docId = id;
+      // console.log(docId);
+
       const socket = io(`${import.meta.env.VITE_Api_URL}/share-with-others`, {
-        query: { email: user.email || "email not found", id: id },
+        query: { email: user.email || "email not found", id: docId },
       });
-      socket.emit("getShareWithEmail", email);
+      socket.emit("getShareWithEmail", {
+        email: user.email || "email not found",
+        id: docId,
+        shareEmail: email,
+      });
 
       socket.on("shareResponse", (res) => {
         if (res.status === true) {

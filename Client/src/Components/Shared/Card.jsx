@@ -2,6 +2,7 @@ import moment from "moment";
 import React, { useEffect, useRef, useState } from "react";
 import { CiMenuKebab } from "react-icons/ci";
 import { useNavigate } from "react-router";
+import Swal from "sweetalert2";
 
 const Card = ({
   doc,
@@ -82,7 +83,19 @@ const Card = ({
               </button>
               <button
                 onClick={() => {
-                  handleDeleteBtn(doc?._id);
+                  Swal.fire({
+                    title: "Are you sure?",
+                    text: "You won't be able to revert this!",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#3085d6",
+                    cancelButtonColor: "#d33",
+                    confirmButtonText: "Yes, delete it!",
+                  }).then((result) => {
+                    if (result.isConfirmed) {
+                      handleDeleteBtn(doc?._id);
+                    }
+                  });
                 }}
                 className="px-3 py-2 text-left cursor-pointer hover:bg-blue-50 text-gray-700 text-xs sm:text-sm"
               >
