@@ -40,17 +40,14 @@ const DocumentDetails = () => {
     };
 
     socket.on("getDocumentDetails", handleGetDetails);
-    socket.on("disconnect", () => console.log("Details socket disconnected"));
 
     return () => {
       socket.off("getDocumentDetails", handleGetDetails);
       socket.disconnect();
-      detailsSocketRef.current = null;
     };
   }, [id, user, user?.email, editable]);
 
   // Track online users in the document room
-
   useEffect(() => {
     if (!user) {
       return;
@@ -97,12 +94,9 @@ const DocumentDetails = () => {
       <div className="w-full container mx-auto py-5 bg-white rounded-2xl shadow-2xl sm:p-10 flex flex-col gap-6">
         <div className="flex justify-between items-center flex-col sm:flex-row sm:items-center gap-3 sm:gap-6">
           <div>
-            <label className="text-lg font-semibold text-gray-700 min-w-[60px]">
-              Title:
-            </label>
             {editable ? (
               <input
-                className="text-2xl font-bold text-gray-900 border-b-2 border-blue-400 bg-blue-50 px-2 py-1 rounded focus:outline-none w-full sm:w-auto"
+                className="text-2xl font-bold text-gray-900 border-b-2 border-blue-400 bg-blue-50 px-2 py-1 rounded focus:outline-none sm:w-auto"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 onBlur={handleEditableToggle}

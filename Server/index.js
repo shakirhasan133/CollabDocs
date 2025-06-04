@@ -70,11 +70,12 @@ io.use((socket, next) => {
 const MyDocument = io.of("/my-documents");
 const SharedDocuments = io.of("/shared-documents");
 const CreateDocuments = io.of("/new-documents");
-const getActiveUsers = io.of("/active-users");
 const getDocumentDetails = io.of("/document-details");
 const documentDetailsUpdate = io.of("/document-details-update");
 const DeleteDocument = io.of("/deleteDocument");
 const ShareWithOther = io.of("/share-with-others");
+
+const DocumentsDetailsPage = io.of("document-details-page");
 
 let onlineUsers = [];
 
@@ -234,6 +235,57 @@ const run = async () => {
       });
     });
 
+    // Documents Details New
+    DocumentsDetailsPage.on("connection", (socket) => {
+      socket.on("sendDetailsData", async (data) => {
+        const { email, id } = data;
+
+        try {
+          const query = {
+            _id: new ObjectId(id),
+            $or: [{ userEmail: email }, { sharedWith: { $in: [email] } }],
+          };
+          const result = await documentData.findOne(query);
+          socket.join(id); // join room by doc id
+          socket.emit("getDocumentDetails", result);
+        } catch (error) {
+          socket.emit("getDocumentDetails", {
+            error: "Failed to fetch document",
+          });
+        }
+      });
+
+      socket.on("UpdateDetails", async (data) => {
+        const { email, id, title, details } = data;
+
+        try {
+          const query = {
+            _id: new ObjectId(id),
+            $or: [{ userEmail: email }, { sharedWith: { $in: [email] } }],
+          };
+          const upDoc = {
+            $set: {
+              title: title,
+              details: details,
+              lastEdited: Date.now(),
+            },
+          };
+          const result = await documentData.updateOne(query, upDoc);
+          if (result.acknowledged) {
+            const updatedDoc = await documentData.findOne({
+              _id: new ObjectId(id),
+            });
+            // Emit to all users in this document room
+            documentNamespace.to(id).emit("getDocumentDetails", updatedDoc);
+          }
+        } catch (error) {
+          console.log("Update error", error);
+        }
+      });
+
+      socket.on("disconnect", () => {});
+    });
+
     // Get Documents Details
     getDocumentDetails.on("connection", (socket) => {
       socket.on("sendDetailsData", async (data) => {
@@ -247,7 +299,7 @@ const run = async () => {
           socket.emit("getDocumentDetails", result);
         } catch (error) {
           console.error("Error fetching document:", error);
-          socket.emit("getDocumentDetails", {
+          io.of("document-details").emit("getDocumentDetails", {
             error: "Failed to fetch document",
           });
         }
@@ -294,7 +346,7 @@ const run = async () => {
                 };
                 const data = await documentData.findOne(query);
 
-                clientSocket.emit("getDocumentDetails", data);
+                documentDetailsUpdate.emit("getDocumentDetails", data);
               }
             }
           }
@@ -302,6 +354,7 @@ const run = async () => {
       });
     });
 
+    // Share or delete
     const handleDeleteOrUnshare = async (email, id) => {
       try {
         const query = { _id: new ObjectId(id) };
