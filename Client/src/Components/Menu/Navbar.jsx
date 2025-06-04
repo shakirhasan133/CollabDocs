@@ -4,7 +4,6 @@ import logo from "../../assets/logo.png";
 import React, { useState, useEffect, useRef } from "react";
 import { IoIosClose } from "react-icons/io";
 import { PiSignOutBold } from "react-icons/pi";
-import { io } from "socket.io-client";
 
 const Navbar = () => {
   const { user, signOutUser } = UseAuth();
@@ -18,7 +17,6 @@ const Navbar = () => {
   const menuItems = [
     { path: "/my-documents", label: "My Documents" },
     { path: "/shared", label: "Shared With Me" },
-    // { path: "/active-user", label: "Active User" },
   ];
 
   const toggleProfileMenu = () => {
@@ -34,43 +32,6 @@ const Navbar = () => {
         console.log(error);
       });
   };
-
-  // Get Active User
-  useEffect(() => {
-    if (!user) return;
-    const socket = io(`${import.meta.env.VITE_Api_URL}/active-users`, {
-      query: {
-        email: user?.email,
-        name: user?.displayName,
-        photoURL: user?.photoURL,
-      },
-    });
-
-    const handleConnect = () => {
-      const data = {
-        email: user?.email,
-        name: user?.displayName,
-        photoURL: user?.photoURL,
-      };
-      socket.emit("getActiveUserData", data);
-    };
-    const handleDisconnect = () => {
-      const data = {
-        email: user?.email,
-      };
-      socket.emit("getOfflineUserData", data);
-    };
-
-    socket.on("connect", handleConnect);
-    socket.on("disconnect", handleDisconnect);
-
-    // Cleanup function to avoid multiple sockets
-    return () => {
-      socket.disconnect();
-      socket.off("connect", handleConnect);
-      socket.off("disconnect", handleDisconnect);
-    };
-  }, [user]);
 
   useEffect(() => {
     function handleClickOutside(event) {

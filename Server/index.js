@@ -255,9 +255,8 @@ const run = async () => {
         }
       });
 
-      socket.on("UpdateDetails", async (data) => {
+      socket.on("UpdateNewDocument", async (data) => {
         const { email, id, title, details } = data;
-
         try {
           const query = {
             _id: new ObjectId(id),
@@ -276,82 +275,13 @@ const run = async () => {
               _id: new ObjectId(id),
             });
             // Emit to all users in this document room
-            documentNamespace.to(id).emit("getDocumentDetails", updatedDoc);
+            DocumentsDetailsPage.to(id).emit("getDocumentDetails", updatedDoc);
           }
         } catch (error) {
           console.log("Update error", error);
         }
       });
-
       socket.on("disconnect", () => {});
-    });
-
-    // Get Documents Details
-    getDocumentDetails.on("connection", (socket) => {
-      socket.on("sendDetailsData", async (data) => {
-        const { email, id } = data;
-        try {
-          const query = {
-            _id: new ObjectId(id),
-            $or: [{ userEmail: email }, { sharedWith: { $in: [email] } }],
-          };
-          const result = await documentData.findOne(query);
-          socket.emit("getDocumentDetails", result);
-        } catch (error) {
-          console.error("Error fetching document:", error);
-          io.of("document-details").emit("getDocumentDetails", {
-            error: "Failed to fetch document",
-          });
-        }
-      });
-      socket.on("disconnect", () => {});
-    });
-
-    // Update Document Data
-    documentDetailsUpdate.on("connection", (socket) => {
-      socket.on("UpdateDetails", async (data) => {
-        const { email, id, title, details } = data;
-
-        // New Code
-        const documentId = id;
-        socket.join(documentId);
-
-        try {
-          const query = {
-            _id: new ObjectId(id),
-            $or: [{ userEmail: email }, { sharedWith: { $in: [email] } }],
-          };
-          const upDoc = {
-            $set: {
-              title: title,
-              details: details,
-              lastEdited: Date.now(),
-            },
-          };
-          const result = await documentData.updateOne(query, upDoc);
-          if (result.acknowledged === true) {
-            const updateDoc = await documentData.findOne({
-              _id: new ObjectId(id),
-            });
-            for (const [id, clientSocket] of getDocumentDetails.sockets) {
-              const clientEmail = clientSocket.handshake.query.email;
-
-              if (
-                updateDoc.userEmail === clientEmail ||
-                updateDoc.sharedWith.includes(clientEmail)
-              ) {
-                const query = {
-                  _id: new ObjectId(id),
-                  $or: [{ userEmail: email }, { sharedWith: { $in: [email] } }],
-                };
-                const data = await documentData.findOne(query);
-
-                documentDetailsUpdate.emit("getDocumentDetails", data);
-              }
-            }
-          }
-        } catch (error) {}
-      });
     });
 
     // Share or delete

@@ -9,50 +9,19 @@ const DocumentDetails = () => {
   const { id } = useParams();
   const editor = useRef(null);
   const { user } = UseAuth();
-
-  const [content, setContent] = useState({});
+  const [content, setContent] = useState("");
   const [editable, setEditable] = useState(false);
   const [title, setTitle] = useState("");
   const [onlineUsers, setOnlineUsers] = useState([]);
-
-  const detailsSocketRef = useRef(null);
   const roomSocketRef = useRef(null);
-  const updateSocketRef = useRef(null);
-
-  // Fetch and update document details
-  useEffect(() => {
-    if (!id || !user) return;
-
-    detailsSocketRef.current = io(
-      `${import.meta.env.VITE_Api_URL}/document-details`,
-      {
-        query: { email: user.email },
-      }
-    );
-
-    const socket = detailsSocketRef.current;
-
-    socket.emit("sendDetailsData", { email: user.email, id });
-
-    const handleGetDetails = (data) => {
-      setContent(data);
-      if (!editable) setTitle(data.title);
-    };
-
-    socket.on("getDocumentDetails", handleGetDetails);
-
-    return () => {
-      socket.off("getDocumentDetails", handleGetDetails);
-      socket.disconnect();
-    };
-  }, [id, user, user?.email, editable]);
+  let shakirSocket = useRef(null);
+  const currentContentRef = useRef("");
 
   // Track online users in the document room
   useEffect(() => {
     if (!user) {
       return;
     }
-
     roomSocketRef.current = io(`${import.meta.env.VITE_Api_URL}/document-room`);
     roomSocketRef.current.on("connect", () => {
       roomSocketRef.current.emit("join-document", {
@@ -68,29 +37,45 @@ const DocumentDetails = () => {
     return () => {};
   }, [user]);
 
-  // Socket to emit updates
+  // UpdateCode
   useEffect(() => {
-    updateSocketRef.current = io(
-      `${import.meta.env.VITE_Api_URL}/document-details-update`
-    );
-    return () => {
-      updateSocketRef.current?.disconnect();
-      updateSocketRef.current = null;
+    if (!user) return;
+    const socket = io(`${import.meta.env.VITE_Api_URL}/document-details-page`);
+    shakirSocket.current = socket;
+
+    socket.emit("sendDetailsData", { email: user?.email, id: id });
+    const handleDetails = (data) => {
+      // console.log(data);
+      if (data.details !== currentContentRef.current) {
+        setContent(data.details);
+        currentContentRef.current = data.details;
+      }
+      if (!editable) {
+        setTitle(data.title);
+      }
     };
-  }, []);
+
+    socket.on("getDocumentDetails", handleDetails);
+
+    return () => {
+      socket.off("getDocumentDetails", handleDetails);
+      socket.disconnect();
+    };
+  }, [user, id]);
 
   const handleNewDataSubmit = (details, newTitle) => {
+    currentContentRef.current = details;
     const data = { email: user?.email, id, title: newTitle, details };
-    updateSocketRef.current?.emit("UpdateDetails", data);
+    shakirSocket.current.emit("UpdateNewDocument", data);
   };
 
   const handleEditableToggle = () => {
-    handleNewDataSubmit(content.details, title);
+    handleNewDataSubmit(content?.details, title);
     setEditable((prev) => !prev);
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 py-2 px-2">
+    <div className="min-h-screen bg-gray-100 py-2 px-2 ">
       <div className="w-full container mx-auto py-5 bg-white rounded-2xl shadow-2xl sm:p-10 flex flex-col gap-6">
         <div className="flex justify-between items-center flex-col sm:flex-row sm:items-center gap-3 sm:gap-6">
           <div>
@@ -98,7 +83,9 @@ const DocumentDetails = () => {
               <input
                 className="text-2xl font-bold text-gray-900 border-b-2 border-blue-400 bg-blue-50 px-2 py-1 rounded focus:outline-none sm:w-auto"
                 value={title}
-                onChange={(e) => setTitle(e.target.value)}
+                onChange={(e) => {
+                  setTitle(e.target.value);
+                }}
                 onBlur={handleEditableToggle}
                 autoFocus
               />
@@ -126,25 +113,23 @@ const DocumentDetails = () => {
                 title={user?.name}
               >
                 {/* {user.name[0]?.toUpperCase()} */}
-                <img
-                  src={user?.UserPhoto}
-                  alt=""
-                  srcset=""
-                  className="rounded-full"
-                />
+                <img src={user?.UserPhoto} alt="" className="rounded-full" />
               </div>
             ))}
           </div>
         </div>
 
-        <div className="w-full min-h-[60vh]">
+        <div className="w-full min-h-[80vh]">
           <JoditEditor
             ref={editor}
-            value={content.details}
+            value={content}
             tabIndex={1}
-            placeholder="Start typing..."
-            onBlur={(newContent) => handleNewDataSubmit(newContent, title)}
-            className="rounded-lg border border-gray-200 shadow-sm text-text min-h-[100vh]"
+            config={{
+              placeholder: "",
+              editorClassName: "text-black",
+            }}
+            onChange={(newContent) => handleNewDataSubmit(newContent, title)}
+            className="rounded-lg border border-gray-200 shadow-sm text-text min-h-[80vh]"
           />
         </div>
       </div>
