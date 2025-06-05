@@ -64,6 +64,7 @@ const DocumentDetails = () => {
   }, [user, id]);
 
   const handleNewDataSubmit = (details, newTitle) => {
+    if (currentContentRef.current === details) return;
     currentContentRef.current = details;
     const data = { email: user?.email, id, title: newTitle, details };
     shakirSocket.current.emit("UpdateNewDocument", data);
