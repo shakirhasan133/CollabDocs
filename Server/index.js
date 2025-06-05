@@ -78,6 +78,7 @@ const ShareWithOther = io.of("/share-with-others");
 const DocumentsDetailsPage = io.of("document-details-page");
 
 let onlineUsers = [];
+const documentCache = {}; // { [documentId]: { title, details, timer } }
 
 // MongoDB
 const uri = `mongodb+srv://${process.env.DB_UserName}:${process.env.DB_Password}@collabdocs.rbgkqis.mongodb.net/?retryWrites=true&w=majority&appName=CollabDocs`;
@@ -235,7 +236,7 @@ const run = async () => {
       });
     });
 
-    // Documents Details New
+    // // Documents Details New
     DocumentsDetailsPage.on("connection", (socket) => {
       socket.on("sendDetailsData", async (data) => {
         const { email, id } = data;
@@ -246,7 +247,8 @@ const run = async () => {
             $or: [{ userEmail: email }, { sharedWith: { $in: [email] } }],
           };
           const result = await documentData.findOne(query);
-          socket.join(id); // join room by doc id
+
+          socket.join(id); // join room by doc ID
           socket.emit("getDocumentDetails", result);
         } catch (error) {
           socket.emit("getDocumentDetails", {
@@ -257,31 +259,58 @@ const run = async () => {
 
       socket.on("UpdateNewDocument", async (data) => {
         const { email, id, title, details } = data;
-        try {
-          const query = {
-            _id: new ObjectId(id),
-            $or: [{ userEmail: email }, { sharedWith: { $in: [email] } }],
-          };
-          const upDoc = {
-            $set: {
-              title: title,
-              details: details,
-              lastEdited: Date.now(),
-            },
-          };
-          const result = await documentData.updateOne(query, upDoc);
-          if (result.acknowledged) {
-            const updatedDoc = await documentData.findOne({
-              _id: new ObjectId(id),
-            });
-            // Emit to all users in this document room
-            DocumentsDetailsPage.to(id).emit("getDocumentDetails", updatedDoc);
-          }
-        } catch (error) {
-          console.log("Update error", error);
+
+        // Store or update document in memory cache
+        if (!documentCache[id]) {
+          documentCache[id] = { title, details, timer: null };
+        } else {
+          documentCache[id].title = title;
+          documentCache[id].details = details
+            ? details
+            : documentCache[id].details;
         }
+
+        // Clear existing timer if already set
+        if (documentCache[id].timer) {
+          clearTimeout(documentCache[id].timer);
+        }
+
+        // Set new timer for 2 seconds
+        documentCache[id].timer = setTimeout(async () => {
+          try {
+            const query = {
+              _id: new ObjectId(id),
+              $or: [{ userEmail: email }, { sharedWith: { $in: [email] } }],
+            };
+
+            const upDoc = {
+              $set: {
+                title: documentCache[id].title,
+                details: documentCache[id].details,
+                lastEdited: Date.now(),
+              },
+            };
+
+            const result = await documentData.updateOne(query, upDoc);
+
+            if (result.acknowledged) {
+              const updatedDoc = await documentData.findOne({
+                _id: new ObjectId(id),
+              });
+              DocumentsDetailsPage.to(id).emit(
+                "getDocumentDetails",
+                updatedDoc
+              );
+            }
+          } catch (error) {
+            console.log("Update error:", error);
+          }
+        }, 2000); // Wait 2 seconds after last change
       });
-      socket.on("disconnect", () => {});
+
+      socket.on("disconnect", () => {
+        // Optionally cleanup if needed
+      });
     });
 
     // Share or delete

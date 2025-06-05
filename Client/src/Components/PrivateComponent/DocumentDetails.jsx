@@ -4,6 +4,7 @@ import JoditEditor from "jodit-react";
 import { FiEdit2 } from "react-icons/fi";
 import io from "socket.io-client";
 import UseAuth from "../../Hooks/UseAuth";
+import { debounce } from "lodash";
 
 const DocumentDetails = () => {
   const { id } = useParams();
@@ -75,6 +76,12 @@ const DocumentDetails = () => {
     setEditable((prev) => !prev);
   };
 
+  const debouncedSubmit = useRef(
+    debounce((details, title) => {
+      handleNewDataSubmit(details, title);
+    }, 400) // 400ms delay
+  ).current;
+
   return (
     <div className="min-h-screen bg-gray-100 py-2 px-2 ">
       <div className="w-full container mx-auto py-5 bg-white rounded-2xl shadow-2xl sm:p-10 flex flex-col gap-6">
@@ -129,7 +136,7 @@ const DocumentDetails = () => {
               placeholder: "",
               editorClassName: "text-black",
             }}
-            onChange={(newContent) => handleNewDataSubmit(newContent, title)}
+            onChange={(newContent) => debouncedSubmit(newContent, title)}
             className="rounded-lg border border-gray-200 shadow-sm text-text min-h-[80vh]"
           />
         </div>
