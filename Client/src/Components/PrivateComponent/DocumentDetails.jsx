@@ -20,7 +20,7 @@ const DocumentDetails = () => {
 
   // Track online users in the document room
   useEffect(() => {
-    if (!user) {
+    if (!user || !id) {
       return;
     }
     roomSocketRef.current = io(`${import.meta.env.VITE_Api_URL}/document-room`);
@@ -29,6 +29,7 @@ const DocumentDetails = () => {
         name: user?.displayName,
         photo: user?.photoURL,
         email: user?.email,
+        docID: id,
       });
     });
 
@@ -39,6 +40,8 @@ const DocumentDetails = () => {
       roomSocketRef.current.disconnect();
     };
   }, [user]);
+
+  // console.log(onlineUsers);
 
   // UpdateCode
   useEffect(() => {
@@ -120,10 +123,12 @@ const DocumentDetails = () => {
               <div
                 key={index}
                 className="w-8 h-8 rounded-full cursor-pointer bg-blue-500 text-white flex items-center justify-center text-xs font-bold"
-                title={user?.name}
+                title={user?.UserName ? user?.UserName : user?.userEmail}
               >
-                {/* {user.name[0]?.toUpperCase()} */}
-                <img src={user?.UserPhoto} alt="" className="rounded-full" />
+                {user?.UserPhoto && (
+                  <img src={user?.UserPhoto} alt="" className="rounded-full" />
+                )}
+                {(user?.UserName && user?.UserName[0].toUpperCase()) || "User"}
               </div>
             ))}
           </div>

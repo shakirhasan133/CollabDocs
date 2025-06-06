@@ -77,8 +77,7 @@ const ShareWithOther = io.of("/share-with-others");
 
 const DocumentsDetailsPage = io.of("document-details-page");
 
-let onlineUsers = [];
-const documentCache = {}; // { [documentId]: { title, details, timer } }
+const documentCache = {};
 
 // MongoDB
 const uri = `mongodb+srv://${process.env.DB_UserName}:${process.env.DB_Password}@collabdocs.rbgkqis.mongodb.net/?retryWrites=true&w=majority&appName=CollabDocs`;
@@ -126,9 +125,15 @@ const run = async () => {
     });
 
     // Online User in a document
+    let onlineUsersByDoc = {};
+
     io.of("/document-room").on("connection", (socket) => {
       socket.on("join-document", (data) => {
-        const { name, photo, email } = data;
+        const { name, photo, email, docID } = data;
+
+        socket.docID = docID;
+        socket.email = email;
+
         const userData = {
           SocketID: socket.id,
           UserName: name,
@@ -136,21 +141,37 @@ const run = async () => {
           userEmail: email,
         };
 
-        // console.log(userData);
-        const isData = onlineUsers.find(
-          (data) => data.userEmail === userData.userEmail
-        );
-        if (!isData) {
-          onlineUsers.push(userData);
-          // console.log(onlineUsers.length);
+        // Initialize docID list if not exists
+        if (!onlineUsersByDoc[docID]) {
+          onlineUsersByDoc[docID] = [];
         }
 
-        io.of("/document-room").emit("GetOnlineUser", onlineUsers);
+        const alreadyExist = onlineUsersByDoc[docID].some(
+          (u) => u.userEmail === email
+        );
+
+        if (!alreadyExist) {
+          onlineUsersByDoc[docID].push(userData);
+        }
+
+        //  Send existing active users to this newly connected user only
+        socket.emit("GetOnlineUser", onlineUsersByDoc[docID]);
+
+        //  Broadcast updated list to everyone else in the same room
+        socket.join(docID);
+        socket.to(docID).emit("GetOnlineUser", onlineUsersByDoc[docID]);
       });
 
       socket.on("disconnect", () => {
-        onlineUsers = onlineUsers.filter((data) => data.SocketID !== socket.id);
-        io.of("/document-room").emit("GetOnlineUser", onlineUsers);
+        const docID = socket.docID;
+        if (docID && onlineUsersByDoc[docID]) {
+          onlineUsersByDoc[docID] = onlineUsersByDoc[docID].filter(
+            (u) => u.SocketID !== socket.id
+          );
+          io.of("/document-room")
+            .to(docID)
+            .emit("GetOnlineUser", onlineUsersByDoc[docID]);
+        }
       });
     });
 
