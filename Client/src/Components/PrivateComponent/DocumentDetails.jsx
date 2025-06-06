@@ -125,10 +125,11 @@ const DocumentDetails = () => {
                 className="w-8 h-8 rounded-full cursor-pointer bg-blue-500 text-white flex items-center justify-center text-xs font-bold"
                 title={user?.UserName ? user?.UserName : user?.userEmail}
               >
-                {user?.UserPhoto && (
+                {(user?.UserPhoto && (
                   <img src={user?.UserPhoto} alt="" className="rounded-full" />
-                )}
-                {(user?.UserName && user?.UserName[0].toUpperCase()) || "User"}
+                )) ||
+                  (user?.UserName && user?.UserName[0].toUpperCase()) ||
+                  "User"}
               </div>
             ))}
           </div>
@@ -141,7 +142,7 @@ const DocumentDetails = () => {
             tabIndex={1}
             config={{
               placeholder: "",
-              editorClassName: "text-black",
+              editorClassName: "text-black py-5",
             }}
             onChange={(newContent) => debouncedSubmit(newContent, title)}
             className="rounded-lg border border-gray-200 shadow-sm text-text min-h-[80vh]"

@@ -14,6 +14,7 @@ const Navbar = () => {
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const profileMenuRef = useRef(null);
   const profileImageRef = useRef(null);
+  const [isDocumentsPage, setIsDocumentsPage] = useState(false);
   const menuItems = [
     { path: "/my-documents", label: "My Documents" },
     { path: "/shared", label: "Shared With Me" },
@@ -22,6 +23,14 @@ const Navbar = () => {
   const toggleProfileMenu = () => {
     setIsProfileMenuOpen(!isProfileMenuOpen);
   };
+
+  useEffect(() => {
+    if (location.pathname.startsWith("/documents/")) {
+      setIsDocumentsPage(true);
+    } else {
+      setIsDocumentsPage(false);
+    }
+  }, [location.pathname]);
 
   const handleSignOut = () => {
     signOutUser()
@@ -54,7 +63,13 @@ const Navbar = () => {
   const firstName = user?.displayName?.split(" ")[0] || "User";
 
   return (
-    <div className="container mx-auto py-2 border-b-2 sticky top-0 z-50 bg-white">
+    <div
+      className={
+        !isDocumentsPage
+          ? `container mx-auto py-2 border-b-2 sticky top-0 z-50 bg-white`
+          : `container mx-auto py-2 border-b-2  bg-white`
+      }
+    >
       <section className="flex items-center justify-between ">
         {/* Left Section - Logo */}
         <div className="flex items-center">
