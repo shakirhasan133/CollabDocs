@@ -35,7 +35,9 @@ const DocumentDetails = () => {
     roomSocketRef.current.on("GetOnlineUser", (data) => {
       setOnlineUsers(data);
     });
-    return () => {};
+    return () => {
+      roomSocketRef.current.disconnect();
+    };
   }, [user]);
 
   // UpdateCode

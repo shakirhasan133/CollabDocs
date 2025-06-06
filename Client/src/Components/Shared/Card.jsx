@@ -1,7 +1,7 @@
 import moment from "moment";
 import React, { useEffect, useRef, useState } from "react";
 import { CiMenuKebab } from "react-icons/ci";
-import { useNavigate } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 import Swal from "sweetalert2";
 
 const Card = ({
@@ -15,6 +15,16 @@ const Card = ({
   const navigate = useNavigate();
   const [openMenuIndex, setOpenMenuIndex] = useState(null);
   const menuRefs = useRef([]);
+  const location = useLocation();
+  const [isSharedPage, setIsSharedPage] = useState(false);
+
+  useEffect(() => {
+    if (location.pathname.endsWith("/shared")) {
+      setIsSharedPage(true);
+    } else {
+      setIsSharedPage(false);
+    }
+  }, [location.pathname]);
 
   // Close menu on outside click
   useEffect(() => {
@@ -101,14 +111,16 @@ const Card = ({
               >
                 Delete
               </button>
-              <button
-                onClick={() => {
-                  handleShareButton(doc?._id);
-                }}
-                className="px-3 py-2 text-left cursor-pointer hover:bg-blue-50 text-gray-700 rounded-b-lg text-xs sm:text-sm"
-              >
-                Share
-              </button>
+              {!isSharedPage && (
+                <button
+                  onClick={() => {
+                    handleShareButton(doc?._id);
+                  }}
+                  className={`px-3 py-2 text-left cursor-pointer hover:bg-blue-50 text-gray-700 rounded-b-lg text-xs sm:text-sm`}
+                >
+                  Share
+                </button>
+              )}
             </div>
           )}
         </div>
