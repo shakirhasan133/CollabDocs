@@ -87,7 +87,7 @@ const Navbar = () => {
                 to={item.path}
                 className={`px-3 py-2 rounded-md text-sm font-medium ${
                   pathname === item.path
-                    ? "bg-gray-700 text-white"
+                    ? "bg-primary-light hover:bg-primary-dark text-white"
                     : "text-gray-700 hover:bg-gray-200 hover:text-black"
                 }`}
               >

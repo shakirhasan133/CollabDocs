@@ -122,7 +122,7 @@ const DocumentDetails = () => {
             {onlineUsers.map((user, index) => (
               <div
                 key={index}
-                className="w-8 h-8 rounded-full cursor-pointer bg-blue-500 text-white flex items-center justify-center text-xs font-bold"
+                className={`w-8 h-8 rounded-full cursor-pointer bg-blue-500 text-white flex items-center justify-center text-xs font-bold`}
                 title={user?.UserName ? user?.UserName : user?.userEmail}
               >
                 {(user?.UserPhoto && (

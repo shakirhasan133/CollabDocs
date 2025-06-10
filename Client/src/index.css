@@ -1,17 +1,52 @@
 @import "tailwindcss";
 @plugin "daisyui";
 
+@import url("https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap");
+
 @theme {
-  --color-primary: oklch(0.74 0.17 264); /* #6366F1 (Indigo) */
-  --color-secondary: oklch(0.75 0.18 215); /* #0EA5E9 (Sky Blue) */
-  --color-accent: oklch(0.77 0.14 152); /* #10B981 (Emerald Green) */
-  --color-background: oklch(0.99 0.01 220); /* #F9FAFB (Light Gray) */
-  --color-surface: oklch(1 0 0); /* #FFFFFF */
-  --color-text: oklch(0.32 0.02 260); /* #1F2937 (Dark Slate) */
-  --color-muted: oklch(0.51 0.03 250); /* #6B7280 (Cool Gray) */
-  --color-danger: oklch(0.69 0.25 20); /* #F43F5E (Rose Red) */
+  /* PRIMARY — #129990 */
+  --color-primary-light: oklch(0.5 0.15 185); /* Lighter */
+  --color-primary: oklch(0.75 0.15 185); /* #129990 */
+  --color-primary-dark: oklch(0.4 0.15 185); /* Darker */
+
+  /* SECONDARY — #90D1CA */
+  --color-secondary-light: oklch(0.9 0.11 190);
+  --color-secondary: oklch(0.8 0.11 190); /* #90D1CA */
+  --color-secondary-dark: oklch(0.65 0.11 190);
+
+  /* ACCENT — #FFFBDE */
+  --color-accent-light: oklch(0.97 0.05 100);
+  --color-accent: oklch(0.92 0.05 100); /* #FFFBDE */
+  --color-accent-dark: oklch(0.78 0.05 100);
+
+  /* TEXT — #096B68 */
+  --color-text-light: oklch(0.45 0.04 185);
+  --color-text: oklch(0.3 0.04 185); /* #096B68 base */
+  --color-text-dark: oklch(0.2 0.04 185);
+
+  /* BACKGROUND (Based on Cream) */
+  --color-background-light: oklch(0.98 0.01 100);
+  --color-background: oklch(0.94 0.01 100); /* Soft Cream */
+  --color-background-dark: oklch(0.25 0.01 100);
+
+  /* SURFACE (Neutral White) */
+  --color-surface-light: oklch(1 0 0);
+  --color-surface: oklch(0.97 0.005 100);
+  --color-surface-dark: oklch(0.25 0.005 100);
+
+  /* MUTED — desaturated soft teal */
+  --color-muted-light: oklch(0.65 0.03 185);
+  --color-muted: oklch(0.5 0.03 185);
+  --color-muted-dark: oklch(0.35 0.03 185);
+
+  /* DANGER — Rose Red */
+  --color-danger-light: oklch(0.8 0.25 25);
+  --color-danger: oklch(0.7 0.25 25);
+  --color-danger-dark: oklch(0.5 0.25 25);
+
+  --font-display: "Inter", "sans-serif";
 }
 
-/* html {
-  background-color: white;
-} */
+body {
+  font-family: "Inter", sans-serif;
+}

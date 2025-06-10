@@ -157,41 +157,44 @@ const MyFile = () => {
           <h1 className="text-black text-2xl sm:text-3xl font-bold">
             My Documents
           </h1>
-          <button className="btn w-full sm:w-auto" onClick={handleNewDocument}>
+          <button
+            className="btn w-full sm:w-auto bg-primary-light hover:bg-primary-dark"
+            onClick={handleNewDocument}
+          >
             Create New Documents
           </button>
         </div>
 
         {loading && <LoadingPage></LoadingPage>}
 
-        {documents.length === 0 && (
+        {documents.length === 0 && !loading ? (
           <div className="flex items-center justify-center w-full h-screen">
             <h1 className="text-red-500 font-bold text-md">
               No Document created
             </h1>
           </div>
+        ) : (
+          <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 my-5 gap-4">
+            {Array.isArray(documents) &&
+              documents.map((doc, index) => {
+                const title =
+                  doc.title.length > 25
+                    ? doc.title.slice(0, 25) + "..."
+                    : doc.title;
+                return (
+                  <Card
+                    doc={doc}
+                    title={title}
+                    key={index}
+                    index={index}
+                    handleEdit={handleEdit}
+                    handleDeleteBtn={handleDeleteBtn}
+                    handleShareButton={handleShareButton}
+                  ></Card>
+                );
+              })}
+          </div>
         )}
-
-        <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 my-5 gap-4">
-          {Array.isArray(documents) &&
-            documents.map((doc, index) => {
-              const title =
-                doc.title.length > 25
-                  ? doc.title.slice(0, 25) + "..."
-                  : doc.title;
-              return (
-                <Card
-                  doc={doc}
-                  title={title}
-                  key={index}
-                  index={index}
-                  handleEdit={handleEdit}
-                  handleDeleteBtn={handleDeleteBtn}
-                  handleShareButton={handleShareButton}
-                ></Card>
-              );
-            })}
-        </div>
       </section>
     </div>
   );

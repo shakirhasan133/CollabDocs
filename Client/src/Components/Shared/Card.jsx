@@ -64,7 +64,7 @@ const Card = ({
       </h1>
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mt-2 gap-2">
         <p className="text-text text-xs sm:text-[14px]">
-          {doc?.lastEdited ? moment(doc.lastEdited).fromNow() : "Loading..."}
+          {doc?.lastEdited ? moment(doc.lastEdited).fromNow() : "No Changes..."}
         </p>
         <div className="relative w-full sm:w-auto">
           <button
